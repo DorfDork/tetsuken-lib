@@ -1,3 +1,5 @@
+import std.io;
+
 enum imageTypeXBOX : u32{
     // Xbox D3DFORMAT types :
     // See https://wiki.beyondunreal.com/Legacy:Texture_Format
@@ -92,15 +94,35 @@ enum imageTypeXBOX : u32{
     D3DFMT_INDEX16 = 101,
 };
 
+bitfield fmtTXV_FLAG{
+    BIT01   : 1;
+    CLAMP   : 1;
+    BIT03   : 1;
+    BIT04   : 1;
+    TWOSIDED: 1;
+    BIT06   : 1;
+    BIT07   : 1;
+    BIT08   : 1;
+    SPEC    : 1;
+    BIT10   : 1;
+    BIT11   : 1;
+    BIT12   : 1;
+    BIT13   : 1;
+    BIT14   : 1;
+    padd    : 2;
+    pad2    :16;
+};
+
 struct tVectorColorb {
-  u8 R   [[color("FF0000")]];
-  u8 G [[color("00FF00")]];
   u8 B  [[color("0000FF")]];
+  u8 G [[color("00FF00")]];
+  u8 R   [[color("FF0000")]];
   u8 A;
 } [[static, color(std::format("{:02X}{:02X}{:02X}", R, G, B))]];
 
 u32 PalletCount = 0;
 u32 vxt_offset = 0;
+u8 vxt_type = 2;
 struct texturePalRow{
 u32 PaletteOffset;
 u32 PaletteCount;
@@ -110,23 +132,26 @@ tVectorColorb Pallet[PaletteCount] @ PaletteOffset + vxt_offset;
 
 struct textureDataTypeXbox2{
 u32 TexturePaletteOffset;
-u32 flags;
+fmtTXV_FLAG flags;
 u32 Unk1;
+if(vxt_type == 2){ // rowType2=36B（dataOff@16）、rowType1=32B（dataOff@12）。
+    u16 WidthVisible;
 u16 HeightVisible;
-u16 WidthVisible;
-u32 CLUTOffset;
+}
+u32 DataOffset;
 imageTypeXBOX ImageType;
-u16 Height;
 u16 Width;
+u16 Height;
 u32 MipMapCount;
 u32 Pad2;
 if(TexturePaletteOffset){
 PalletCount +=1;
 }
 match(ImageType){
-    (imageTypeXBOX::D3DFMT_DXT1): u8 data[(Height*Width)/2] @ vxt_offset + CLUTOffset;
-    (imageTypeXBOX::D3DFMT_DXT4): u8 data[(Height*Width)] @ vxt_offset + CLUTOffset;
-    (imageTypeXBOX::D3DFMT_P8): u8 data[(Height*Width)] @ vxt_offset + CLUTOffset;
+    (imageTypeXBOX::D3DFMT_DXT1): u8 data[(Height*Width)/2] @ vxt_offset + DataOffset;
+    (imageTypeXBOX::D3DFMT_DXT3): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
+    (imageTypeXBOX::D3DFMT_DXT4): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
+    (imageTypeXBOX::D3DFMT_P8): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
     }
 };
 
@@ -134,6 +159,7 @@ struct VXT{
 vxt_offset = $;
 char MAGIC[4];
 u8 type;
+vxt_type = type;
 u8 flag0;
 u8 flag1;
 padding[1];

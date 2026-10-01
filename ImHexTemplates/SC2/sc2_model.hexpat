@@ -12,40 +12,54 @@ enum modelContent : u8 {
     WEAPON    = 2
 };
 
+enum matrixType : u8 {
+    UNKMT0    = 0,
+    STAGEMTX  = 1,
+    BONEMTX   = 2
+};
+
+enum materialType : u8 {
+    UNLIT  = 0,
+    PRELIT = 1,
+    LIT    = 2
+};
+
+enum opacitySrc : u32 {
+    OPAQUE         = 0,
+    ALPHA          = 1,
+    ADDITIVE       = 2,
+    ADDITIVE_ALPHA = 3,
+    MULTIPLY       = 4,
+    MODULATE_2X    = 11,
+    SPECBALL_16    = 16,
+    SPECBALL_32    = 32,
+    SPECBALL_ALPHA = 33
+};
+
+enum boneType : u8 {
+    BODY     = 0,
+    WEAPON   = 1,
+    FINGER   = 2,
+    FACE     = 3,
+    ROT      = 4,
+    PROT     = 5,
+    AIM      = 7,
+    SLERP    = 9,
+    SWING    = 11, // Some silly stuff with GC (NO ENDIAN SWAPIN)
+    SHIT     = 12,
+    UNNAMED  = 14,
+    RANDEYE  = 15,
+    RANDLID  = 16
+};
+
 enum meshXboxContent : u16 {
     STATICXBOX  = 0,
     SKINNEDXBOX = 4
 };
 
-enum meshGCNContent : u8 {
-    STATICGCN  = 2, //(2, 2, 2, 2)
-    SKINNEDGCN = 3, //(3, 3, 2, 3)  //(3, 3, 3, 3)
-};
-
 enum primativeXbox : u16 {
     TRIANGLESTRIP = 0,
     TRIANGLELIST  = 1
-};
-
-enum primativeGCN : u8 {
-    PACKEDTRIANGLELIST  = 0x90,
-    PACKEDTRIANGLESTRIP = 0x98
-};
-
-enum imageTypeGCN : u32 {
-    I4     = 0,  //(4 bit intensity, 8x8 tiles)
-    I8     = 1,  //(8 bit intensity, 8x4 tiles)
-    IA4    = 2,  //(4 bit intensity with 4 bit alpha, 8x4 tiles)
-    IA8    = 3,  //(8 bit intensity with 8 bit alpha, 4x4 tiles)
-    RGB565 = 4,  //(4x4 tiles)
-    RGB5A3 = 5,  //(*) (4x4 tiles)
-    RGBA8  = 6,  //(4x4 tiles in two cache lines - first is AR and second is GB)
-    CI4    = 8,  //(4 bit color index, 8x8 tiles)
-    CI8    = 9,  //(8 bit color index, 8x4 tiles)
-    C14X2  = 10, //(14 bit color index, 4x4 tiles)
-    CMPR   = 14, //(S3TC compressed, 2x2 blocks of 4x4 tiles)
-    XFB    = 15, // 0x0F
-    UNK16  = 16  // 0x10
 };
 
 enum imageTypeXBOX : u32{
@@ -153,7 +167,11 @@ enum textureMapType : u16{
 
 enum materialTableCull : u8{
     DRAWNBOTHSIDES = 0,
-    DRAWNONESIDE   = 8
+    DRAWNONESIDE   = 8,
+    DRAWNBOTHSIDES_ALPHATEST = 0x10,
+    DRAWNONESIDE_ALPHATEST   = 0x18,
+    DRAWNBOTHSIDES_ALPHATEST_BIT20 = 0x30,
+    DRAWNONESIDE_ALPHATEST_BIT20   = 0x38
 };
 
 bitfield fmtTXV_FLAG{
@@ -183,9 +201,9 @@ struct tVector4b{
 }[[static,name(std::format("{}{}{}{}", X, Y, Z, W))]];
 
 struct tVectorColorb {
-  u8 R   [[color("FF0000")]];
-  u8 G [[color("00FF00")]];
   u8 B  [[color("0000FF")]];
+  u8 G [[color("00FF00")]];
+  u8 R   [[color("FF0000")]];
   u8 A;
 } [[static, color(std::format("{:02X}{:02X}{:02X}", R, G, B))]];
 
@@ -194,12 +212,6 @@ struct tFace{
     u16 Y;
     u16 Z;
 }[[static,name(std::format("{}{}{}", X, Y, Z))]];
-
-bitfield tDimension{
-    X : 10;
-    Y : 10;
-    imagetype : 12;
-}[[static,name(std::format("imagetype{}, X: {}, Y:{}",imagetype, X, Y))]];
 
 struct tVectorUVf{
     float X;
@@ -229,7 +241,7 @@ struct matrixUnk{ // data Present in stage files? boundaries?
 }
 ;
 struct matrixTable{
-    u8 Type;
+    matrixType Type;
     u8 ParentBoneIdx; // parent object to this bone?
     u16 Ukn1;
     u32 Ukn3; // on stages files an offset is present
@@ -243,9 +255,13 @@ struct matrixTable{
 
 import std.io;
 
+u8 mdlVersion = 0;
+u16 mdlWeightTables = 0;
+
 struct mdl_header{
     char MAGIC[4];
-    console ConsoleVersion;
+    u8 Version; // 0x02=Xbox?, 0x03=Gamecube, 0x04=Xbox
+    mdlVersion = Version;
     u8 textureOffsetPoint;
     u8 textureCount;
     u8 isLoaded;
@@ -258,6 +274,7 @@ struct mdl_header{
     u16 BonesCount;
     u16 MaterialsCount;
     u16 WeightTableCount; // always 1?
+    mdlWeightTables = WeightTableCount;
     u32 TextureTableOffset;
     u32 MaterialOffset;
     u32 TextureMapOffset;
@@ -275,6 +292,7 @@ struct mdl_header{
 
 u32 PalletCount = 0;
 u32 vxt_offset = 0;
+u8 vxt_type = 2;
 struct texturePalRow{
 u32 PaletteOffset;
 u32 PaletteCount;
@@ -286,21 +304,24 @@ struct textureDataTypeXbox2{
 u32 TexturePaletteOffset;
 fmtTXV_FLAG flags;
 u32 Unk1;
+if(vxt_type == 2){ // rowType2=36B（dataOff@16）、rowType1=32B（dataOff@12）。
+    u16 WidthVisible;
 u16 HeightVisible;
-u16 WidthVisible;
-u32 CLUTOffset;
+}
+u32 DataOffset;
 imageTypeXBOX ImageType;
-u16 Height;
 u16 Width;
+u16 Height;
 u32 MipMapCount;
 u32 Pad2;
 if(TexturePaletteOffset){
 PalletCount +=1;
 }
 match(ImageType){
-    (imageTypeXBOX::D3DFMT_DXT1): u8 data[(Height*Width)/2] @ vxt_offset + CLUTOffset;
-    (imageTypeXBOX::D3DFMT_DXT4): u8 data[(Height*Width)] @ vxt_offset + CLUTOffset;
-    (imageTypeXBOX::D3DFMT_P8): u8 data[(Height*Width)] @ vxt_offset + CLUTOffset;
+    (imageTypeXBOX::D3DFMT_DXT1): u8 data[(Height*Width)/2] @ vxt_offset + DataOffset;
+    (imageTypeXBOX::D3DFMT_DXT3): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
+    (imageTypeXBOX::D3DFMT_DXT4): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
+    (imageTypeXBOX::D3DFMT_P8): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
     }
 };
 
@@ -308,6 +329,7 @@ struct VXT{
 vxt_offset = $;
 char MAGIC[4];
 u8 type;
+vxt_type = type;
 u8 flag0;
 u8 flag1;
 padding[1];
@@ -357,11 +379,11 @@ struct textureMap{
 
 
 struct materialTable{
-    u8 Type;
+    materialType Type;
     u8 ukn1;
     u8 ukn2;
     materialTableCull CullMode; // 0x00=DrawnBothSides, 0x08=DrawnOneSide
-    u32 OpacitySrc;
+    opacitySrc OpacitySrc;
     u32 VXTOffset0; // offsets within the VXT block
     u32 VXTOffset1;
     u32 VXTOffset2;
@@ -388,10 +410,10 @@ struct materialTable{
     tVector3f Rotation; // eulerangles, degrees (n*360)
     u32 BoneNameOffset;
     tVector3f ukn_bone1;
-    u8 ukn_bone2;
+    u8 AimTargetIdx;
     u8 BoneParentIdx;
     u8 BoneIdx; // used for name look up?
-    u8 ukn_bone3;
+    boneType BoneType;
     //if (BoneNameOffset != 0) {
     char Name[] @ BoneNameOffset;
     //}
@@ -417,8 +439,8 @@ struct buffer4{
 }[[static]];
 u16 vertCount = 0;
 struct face{
-    u16 value;
-    if(vertCount < value){
+    u16 value; // ストリップ（0xFFFFで再開）またはリスト
+    if(value != 0xFFFF && vertCount < value){
     vertCount = value;
     }
 };
@@ -434,14 +456,20 @@ struct face{
     u32 Buffer2Offset;
     u32 Buffer3Offset;
     u32 Buffer4Offset;
+    if(mdlVersion >= 4){
     u32 CenterRadiusOffset; // "Aman" describes this section as "Center+Radius Offset"
+    }
     
     face skinned_mesh_data[FaceCount] @ FaceOffset;
     vertCount+=1;
     
     if(ObjectType == meshXboxContent::STATICXBOX){
     buffer4 staticVerts[vertCount] @ Buffer1Offset;
-    tVector4f CenterRadius @ Buffer1Offset + sizeof(staticVerts);
+    if(mdlVersion >= 4){
+        if(CenterRadiusOffset > 0){
+            tVector4f CenterRadius @ CenterRadiusOffset;
+        }
+    }
     }else if(ObjectType == meshXboxContent::SKINNEDXBOX){
     buffer1 color[vertCount] @ Buffer1Offset;
     buffer2 position[vertCount] @ Buffer2Offset;
@@ -450,6 +478,7 @@ struct face{
     
     };
     
+u8 lastStat = 0;
 struct weightDef{
         tVector3f Positon; // positions relative to assigned bone
         float BoneWeight;
@@ -457,17 +486,67 @@ struct weightDef{
         u8 BoneIdx;
         u8 intcre;
         u8 Unk1[2];
+        lastStat = intcre;
+};
+
+u32 longRow = 4;
+struct weightRowLong{ // 4本影響枠ではstat==1によりレコード数が累積拡張される。
+        weightDef defs[longRow];
+        longRow = longRow + lastStat;
+};
+
+struct weightBuffer { // Flat with dynamic sizing 1,2,3,4,5,6, .......
+    weightDef relative_position_normal1[parent.VertCount1];
+    weightDef relative_position_normal2[parent.VertCount2 * 2];
+    weightDef relative_position_normal3[parent.VertCount3 * 3];
+    weightRowLong relative_position_normal4[parent.VertCount4];
 };
 
 struct weightTable {
     u32 VertCount1; // number of vertices with 1 bone weight per vertex bone_id1
     u32 VertCount2; // number of vertices with 2 bone weight per vertex bone_id2
     u32 VertCount3; // number of vertices with 3 bone weight per vertex bone_id3
-    u32 VertCount4; // number of vertices with 4 bone weight per vertex bone_id4
+    u32 VertCount4; // number of vertices with 4 or more bone weight per vertex bone_id4
     u32 WeightBufferOffset; // weight buffer, also contains vertices and Normals
     u32 VertBuffer1Offset; // Vertex Buffer
     u32 VertBuffer2Offset; // Vertex Buffer2, redundant?
+    longRow = 4;
+    weightBuffer weight_buffer @ WeightBufferOffset;
 
+};
+
+struct weightRowV2{
+        lastStat = 0;
+        weightDef defs[while(lastStat != 1)];
+};
+struct weightTableV2 {
+    u32 zero;
+    u32 WeightBufferOffset;
+    u32 VertBuffer1Offset;
+    u32 VertBuffer2Offset;
+    u32 VertBuffer3Offset;
+    weightRowV2 weight_buffer[(VertBuffer2Offset - VertBuffer1Offset) / 32] @ WeightBufferOffset;
+};
+
+struct weightSection {
+    if(mdlWeightTables > 0){
+        if(mdlVersion > 2){
+            weightTable weight_table;
+        }else{
+            weightTableV2 weight_table;
+        }
+    }
+};
+
+struct boneHeader{
+    u8 day;
+    u8 month;
+    u16 year;
+    u8 second;
+    u8 minute;
+    u8 hour;
+    u8 pad;
+    char author[32];
 };
 
 
@@ -481,11 +560,5 @@ matrixUnk unkMtx @ SC2_MDL.ukn_MatrixTableOffset;
 layerObjectEntryXbox object_0_xbox[SC2_MDL.Objects0Count] @ SC2_MDL.Object0Offset;
 layerObjectEntryXbox object_1_xbox[SC2_MDL.Objects1Count] @ SC2_MDL.Object1Offset;
 layerObjectEntryXbox object_2_xbox[SC2_MDL.Objects2Count] @ SC2_MDL.Object2Offset;
-if(SC2_MDL.WeightTableCount > 0){
-weightTable weight_table @ SC2_MDL.WeightTableOffset;
-weightDef relative_position_normal1[weight_table.VertCount1] @ weight_table.WeightBufferOffset;
-weightDef relative_position_normal2[weight_table.VertCount2 * 2]@ weight_table.WeightBufferOffset + sizeof(relative_position_normal1);
-weightDef relative_position_normal3[weight_table.VertCount3 * 3]@ weight_table.WeightBufferOffset + sizeof(relative_position_normal1) + sizeof(relative_position_normal2);
-weightDef relative_position_normal4[weight_table.VertCount4 * 4]@ weight_table.WeightBufferOffset + sizeof(relative_position_normal1) + sizeof(relative_position_normal2) + sizeof(relative_position_normal3);
-};
-u8 unkarray[40] @ SC2_MDL.BoneHeaderOffset; 
+weightSection weights @ SC2_MDL.WeightTableOffset;
+boneHeader author @ SC2_MDL.BoneHeaderOffset;
