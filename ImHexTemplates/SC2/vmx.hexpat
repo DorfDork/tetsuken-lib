@@ -156,6 +156,28 @@ enum imageTypeXBOX : u32{
     D3DFMT_INDEX16 = 101,
 };
 
+fn bitsPerPixelXbox(imageTypeXBOX type){
+    match(type){
+        (imageTypeXBOX::D3DFMT_L8 | imageTypeXBOX::D3DFMT_AL8 | imageTypeXBOX::D3DFMT_P8 | imageTypeXBOX::D3DFMT_A8): return 8;
+        (imageTypeXBOX::D3DFMT_LIN_L8 | imageTypeXBOX::D3DFMT_LIN_AL8 | imageTypeXBOX::D3DFMT_LIN_A8): return 8;
+        (imageTypeXBOX::D3DFMT_A1R5G5B5 | imageTypeXBOX::D3DFMT_X1R5G5B5 | imageTypeXBOX::D3DFMT_A4R4G4B4 | imageTypeXBOX::D3DFMT_R5G6B5 | imageTypeXBOX::D3DFMT_R5G5B5A1 | imageTypeXBOX::D3DFMT_R4G4B4A4): return 16;
+        (imageTypeXBOX::D3DFMT_A8L8 | imageTypeXBOX::D3DFMT_R6G5B5 | imageTypeXBOX::D3DFMT_G8B8 | imageTypeXBOX::D3DFMT_R8B8 | imageTypeXBOX::D3DFMT_D16 | imageTypeXBOX::D3DFMT_F16 | imageTypeXBOX::D3DFMT_L16 | imageTypeXBOX::D3DFMT_YUY2 | imageTypeXBOX::D3DFMT_UYVY): return 16;
+        (imageTypeXBOX::D3DFMT_LIN_A1R5G5B5 | imageTypeXBOX::D3DFMT_LIN_X1R5G5B5 | imageTypeXBOX::D3DFMT_LIN_A4R4G4B4 | imageTypeXBOX::D3DFMT_LIN_R5G6B5 | imageTypeXBOX::D3DFMT_LIN_R5G5B5A1 | imageTypeXBOX::D3DFMT_LIN_R4G4B4A4): return 16;
+        (imageTypeXBOX::D3DFMT_LIN_A8L8 | imageTypeXBOX::D3DFMT_LIN_R6G5B5 | imageTypeXBOX::D3DFMT_LIN_G8B8 | imageTypeXBOX::D3DFMT_LIN_R8B8 | imageTypeXBOX::D3DFMT_LIN_D16 | imageTypeXBOX::D3DFMT_LIN_F16 | imageTypeXBOX::D3DFMT_LIN_L16): return 16;
+        (imageTypeXBOX::D3DFMT_A8R8G8B8 | imageTypeXBOX::D3DFMT_X8R8G8B8 | imageTypeXBOX::D3DFMT_A8B8G8R8 | imageTypeXBOX::D3DFMT_B8G8R8A8 | imageTypeXBOX::D3DFMT_R8G8B8A8 | imageTypeXBOX::D3DFMT_D24S8 | imageTypeXBOX::D3DFMT_F24S8 | imageTypeXBOX::D3DFMT_V16U16): return 32;
+        (imageTypeXBOX::D3DFMT_LIN_A8R8G8B8 | imageTypeXBOX::D3DFMT_LIN_X8R8G8B8 | imageTypeXBOX::D3DFMT_LIN_A8B8G8R8 | imageTypeXBOX::D3DFMT_LIN_B8G8R8A8 | imageTypeXBOX::D3DFMT_LIN_R8G8B8A8 | imageTypeXBOX::D3DFMT_LIN_D24S8 | imageTypeXBOX::D3DFMT_LIN_F24S8 | imageTypeXBOX::D3DFMT_LIN_V16U16): return 32;
+        (_): return 0;
+    }
+};
+
+fn bytesPerBlockXbox(imageTypeXBOX type){
+    match(type){
+        (imageTypeXBOX::D3DFMT_DXT1): return 8;
+        (imageTypeXBOX::D3DFMT_DXT3 | imageTypeXBOX::D3DFMT_DXT5): return 16;
+        (_): return 0;
+    }
+};
+
 enum textureMapType : u16{
     UNKTT0   = 0,
     DIFFUSE  = 1,
@@ -290,6 +312,36 @@ struct mdl_header{
     u32 BoneHeaderOffset;
 };
 
+fn mipLevelByteCountXbox(imageTypeXBOX type, u32 mipWidth, u32 mipHeight){
+    if(bytesPerBlockXbox(type) != 0){
+        u32 blocksAcross = (mipWidth + 3) / 4;
+        u32 blocksDown = (mipHeight + 3) / 4;
+        return blocksAcross * blocksDown * bytesPerBlockXbox(type);
+    }
+    return mipWidth * mipHeight * bitsPerPixelXbox(type) / 8;
+};
+
+fn halfButAtLeastOne(u32 size){
+    if(size <= 1){
+        return 1;
+    }
+    return size / 2;
+};
+
+fn textureByteCountXbox(imageTypeXBOX type, u32 width, u32 height, u32 mipMapCount){
+    u32 mipWidth = width;
+    u32 mipHeight = height;
+    u32 byteCount = 0;
+    u32 mipLevel = 0;
+    while(mipLevel < mipMapCount || mipLevel == 0){
+        byteCount = byteCount + mipLevelByteCountXbox(type, mipWidth, mipHeight);
+        mipWidth = halfButAtLeastOne(mipWidth);
+        mipHeight = halfButAtLeastOne(mipHeight);
+        mipLevel = mipLevel + 1;
+    }
+    return byteCount;
+};
+
 u32 PalletCount = 0;
 u32 vxt_offset = 0;
 u8 vxt_type = 2;
@@ -317,12 +369,7 @@ u32 Pad2;
 if(TexturePaletteOffset){
 PalletCount +=1;
 }
-match(ImageType){
-    (imageTypeXBOX::D3DFMT_DXT1): u8 data[(Height*Width)/2] @ vxt_offset + DataOffset;
-    (imageTypeXBOX::D3DFMT_DXT3): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
-    (imageTypeXBOX::D3DFMT_DXT4): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
-    (imageTypeXBOX::D3DFMT_P8): u8 data[(Height*Width)] @ vxt_offset + DataOffset;
-    }
+u8 data[textureByteCountXbox(ImageType, Width, Height, MipMapCount)] @ vxt_offset + DataOffset;
 };
 
 struct VXT{
