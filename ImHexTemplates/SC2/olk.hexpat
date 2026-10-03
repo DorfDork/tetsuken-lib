@@ -7,7 +7,7 @@ struct fmtOLK_Entry { // 16 Bytes
 
 struct fmtOLK {
     u32 data_count;
-    u32 olk_id;
+    char olk_id[4];
     u32 alignment;
     u32 reserved0;
     fmtOLK_Entry data_info; // First Entry describes bounds of the data buffer
