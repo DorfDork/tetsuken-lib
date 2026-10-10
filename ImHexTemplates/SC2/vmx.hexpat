@@ -1,4 +1,8 @@
-enum console : u8 {
+#pragma endian little
+
+import std.io;
+
+enum Console : u8 {
     UNK0     = 0,
     UNK1     = 1,
     UNK2     = 2,
@@ -6,25 +10,25 @@ enum console : u8 {
     XBOX     = 4
 };
 
-enum modelContent : u8 {
+enum ModelContent : u8 {
     STAGE     = 0,
     CHARACTER = 1,
     WEAPON    = 2
 };
 
-enum matrixType : u8 {
-    UNKMT0    = 0,
-    STAGEMTX  = 1,
-    BONEMTX   = 2
+enum MatrixType : u8 {
+    UNKMT0   = 0,
+    STAGEMTX = 1,
+    BONEMTX  = 2
 };
 
-enum materialType : u8 {
+enum MaterialType : u8 {
     UNLIT  = 0,
     PRELIT = 1,
     LIT    = 2
 };
 
-enum opacitySrc : u32 {
+enum OpacitySrc : u32 {
     OPAQUE         = 0,
     ALPHA          = 1,
     ADDITIVE       = 2,
@@ -36,149 +40,149 @@ enum opacitySrc : u32 {
     SPECBALL_ALPHA = 33
 };
 
-enum boneType : u8 {
-    BODY     = 0,
-    WEAPON   = 1,
-    FINGER   = 2,
-    FACE     = 3,
-    ROT      = 4,
-    PROT     = 5,
-    AIM      = 7,
-    SLERP    = 9,
-    SWING    = 11, // Some silly stuff with GC (NO ENDIAN SWAPIN)
-    SHIT     = 12,
-    UNNAMED  = 14,
-    RANDEYE  = 15,
-    RANDLID  = 16
+enum BoneType : u8 {
+    BODY    = 0,
+    WEAPON  = 1,
+    FINGER  = 2,
+    FACE    = 3,
+    ROT     = 4,
+    PROT    = 5,
+    AIM     = 7,
+    SLERP   = 9,
+    SWING   = 11, // Some silly stuff with GC (NO ENDIAN SWAPIN)
+    SHIT    = 12,
+    UNNAMED = 14,
+    RANDEYE = 15,
+    RANDLID = 16
 };
 
-enum meshXboxContent : u16 {
+enum MeshXboxContent : u16 {
     STATICXBOX  = 0,
     SKINNEDXBOX = 4
 };
 
-enum primativeXbox : u16 {
+enum PrimativeXbox : u16 {
     TRIANGLESTRIP = 0,
     TRIANGLELIST  = 1
 };
 
-enum imageTypeXBOX : u32{
+enum ImageTypeXBOX : u32 {
     // Xbox D3DFORMAT types :
     // See https://wiki.beyondunreal.com/Legacy:Texture_Format
 
     // Swizzled Formats
 
-    D3DFMT_L8 = 0x00,
-    D3DFMT_AL8 = 0x01,
-    D3DFMT_A1R5G5B5 = 0x02,
-    D3DFMT_X1R5G5B5 = 0x03,
-    D3DFMT_A4R4G4B4 = 0x04,
-    D3DFMT_R5G6B5 = 0x05,
-    D3DFMT_A8R8G8B8 = 0x06,
-    D3DFMT_X8R8G8B8 = 0x07,
-    D3DFMT_X8L8V8U8 = 0x07, // Alias
+    D3DFMT_L8           = 0x00,
+    D3DFMT_AL8          = 0x01,
+    D3DFMT_A1R5G5B5     = 0x02,
+    D3DFMT_X1R5G5B5     = 0x03,
+    D3DFMT_A4R4G4B4     = 0x04,
+    D3DFMT_R5G6B5       = 0x05,
+    D3DFMT_A8R8G8B8     = 0x06,
+    D3DFMT_X8R8G8B8     = 0x07,
+    D3DFMT_X8L8V8U8     = 0x07, // Alias
 
-    D3DFMT_P8 = 0x0b, // 8-bit Palletized
+    D3DFMT_P8           = 0x0B, // 8-bit Palletized
 
-    D3DFMT_A8 = 0x19,
-    D3DFMT_A8L8 = 0x1a,
-    D3DFMT_R6G5B5 = 0x27,
-    D3DFMT_L6V5U5 = 0x27, // Alias
+    D3DFMT_A8           = 0x19,
+    D3DFMT_A8L8         = 0x1A,
+    D3DFMT_R6G5B5       = 0x27,
+    D3DFMT_L6V5U5       = 0x27, // Alias
 
-    D3DFMT_G8B8 = 0x28,
-    D3DFMT_V8U8 = 0x28, // Alias
+    D3DFMT_G8B8         = 0x28,
+    D3DFMT_V8U8         = 0x28, // Alias
 
-    D3DFMT_R8B8 = 0x29,
-    D3DFMT_D24S8 = 0x2a,
-    D3DFMT_F24S8 = 0x2b,
-    D3DFMT_D16 = 0x2c,
-    D3DFMT_D16_LOCKABLE = 0x2c, // Alias
+    D3DFMT_R8B8         = 0x29,
+    D3DFMT_D24S8        = 0x2A,
+    D3DFMT_F24S8        = 0x2B,
+    D3DFMT_D16          = 0x2C,
+    D3DFMT_D16_LOCKABLE = 0x2C, // Alias
 
-    D3DFMT_F16 = 0x2d,
-    D3DFMT_L16 = 0x32,
-    D3DFMT_V16U16 = 0x33,
-    D3DFMT_R5G5B5A1 = 0x38,
-    D3DFMT_R4G4B4A4 = 0x39,
-    D3DFMT_A8B8G8R8 = 0x3A,
-    D3DFMT_Q8W8V8U8 = 0x3A, // Alias
+    D3DFMT_F16          = 0x2D,
+    D3DFMT_L16          = 0x32,
+    D3DFMT_V16U16       = 0x33,
+    D3DFMT_R5G5B5A1     = 0x38,
+    D3DFMT_R4G4B4A4     = 0x39,
+    D3DFMT_A8B8G8R8     = 0x3A,
+    D3DFMT_Q8W8V8U8     = 0x3A, // Alias
 
-    D3DFMT_B8G8R8A8 = 0x3B,
-    D3DFMT_R8G8B8A8 = 0x3C,
+    D3DFMT_B8G8R8A8     = 0x3B,
+    D3DFMT_R8G8B8A8     = 0x3C,
 
     // YUV Formats
 
-    D3DFMT_YUY2 = 0x24,
-    D3DFMT_UYVY = 0x25,
+    D3DFMT_YUY2         = 0x24,
+    D3DFMT_UYVY         = 0x25,
 
     // Compressed Formats
 
-    D3DFMT_DXT1 = 0x0C, // opaque/one-bit alpha
-    D3DFMT_DXT2 = 0x0E, // Alias for D3DFMT_DXT3
-    D3DFMT_DXT3 = 0x0E, // linear alpha
-    D3DFMT_DXT4 = 0x0F, // Alias for D3DFMT_DXT5
-    D3DFMT_DXT5 = 0x0F, // interpolated alpha
+    D3DFMT_DXT1         = 0x0C, // opaque/one-bit alpha
+    D3DFMT_DXT2         = 0x0E, // Alias for D3DFMT_DXT3
+    D3DFMT_DXT3         = 0x0E, // linear alpha
+    D3DFMT_DXT4         = 0x0F, // Alias for D3DFMT_DXT5
+    D3DFMT_DXT5         = 0x0F, // interpolated alpha
 
     // Linear Formats
 
     D3DFMT_LIN_A1R5G5B5 = 0x10,
-    D3DFMT_LIN_R5G6B5 = 0x11,
+    D3DFMT_LIN_R5G6B5   = 0x11,
     D3DFMT_LIN_A8R8G8B8 = 0x12,
-    D3DFMT_LIN_L8 = 0x13,
-    D3DFMT_LIN_R8B8 = 0x16,
-    D3DFMT_LIN_G8B8 = 0x17,
-    D3DFMT_LIN_V8U8 = 0x17, // Alias
+    D3DFMT_LIN_L8       = 0x13,
+    D3DFMT_LIN_R8B8     = 0x16,
+    D3DFMT_LIN_G8B8     = 0x17,
+    D3DFMT_LIN_V8U8     = 0x17, // Alias
 
-    D3DFMT_LIN_AL8 = 0x1b,
-    D3DFMT_LIN_X1R5G5B5 = 0x1c,
-    D3DFMT_LIN_A4R4G4B4 = 0x1d,
-    D3DFMT_LIN_X8R8G8B8 = 0x1e,
-    D3DFMT_LIN_X8L8V8U8 = 0x1e, // Alias
+    D3DFMT_LIN_AL8      = 0x1B,
+    D3DFMT_LIN_X1R5G5B5 = 0x1C,
+    D3DFMT_LIN_A4R4G4B4 = 0x1D,
+    D3DFMT_LIN_X8R8G8B8 = 0x1E,
+    D3DFMT_LIN_X8L8V8U8 = 0x1E, // Alias
 
-    D3DFMT_LIN_A8 = 0x1f,
-    D3DFMT_LIN_A8L8 = 0x20,
-    D3DFMT_LIN_D24S8 = 0x2E,
-    D3DFMT_LIN_F24S8 = 0x2f,
-    D3DFMT_LIN_D16 = 0x30,
-    D3DFMT_LIN_F16 = 0x31,
-    D3DFMT_LIN_L16 = 0x35,
-    D3DFMT_LIN_V16U16 = 0x36,
-    D3DFMT_LIN_R6G5B5 = 0x37,
-    D3DFMT_LIN_L6V5U5 = 0x37, // Alias
+    D3DFMT_LIN_A8       = 0x1F,
+    D3DFMT_LIN_A8L8     = 0x20,
+    D3DFMT_LIN_D24S8    = 0x2E,
+    D3DFMT_LIN_F24S8    = 0x2F,
+    D3DFMT_LIN_D16      = 0x30,
+    D3DFMT_LIN_F16      = 0x31,
+    D3DFMT_LIN_L16      = 0x35,
+    D3DFMT_LIN_V16U16   = 0x36,
+    D3DFMT_LIN_R6G5B5   = 0x37,
+    D3DFMT_LIN_L6V5U5   = 0x37, // Alias
 
     D3DFMT_LIN_R5G5B5A1 = 0x3D,
-    D3DFMT_LIN_R4G4B4A4 = 0x3e,
-    D3DFMT_LIN_A8B8G8R8 = 0x3f,
+    D3DFMT_LIN_R4G4B4A4 = 0x3E,
+    D3DFMT_LIN_A8B8G8R8 = 0x3F,
     D3DFMT_LIN_B8G8R8A8 = 0x40,
     D3DFMT_LIN_R8G8B8A8 = 0x41,
 
-    D3DFMT_VERTEXDATA = 0x64,
+    D3DFMT_VERTEXDATA   = 0x64,
 
-    D3DFMT_INDEX16 = 101,
+    D3DFMT_INDEX16      = 101
 };
 
-fn bitsPerPixelXbox(imageTypeXBOX type){
-    match(type){
-        (imageTypeXBOX::D3DFMT_L8 | imageTypeXBOX::D3DFMT_AL8 | imageTypeXBOX::D3DFMT_P8 | imageTypeXBOX::D3DFMT_A8): return 8;
-        (imageTypeXBOX::D3DFMT_LIN_L8 | imageTypeXBOX::D3DFMT_LIN_AL8 | imageTypeXBOX::D3DFMT_LIN_A8): return 8;
-        (imageTypeXBOX::D3DFMT_A1R5G5B5 | imageTypeXBOX::D3DFMT_X1R5G5B5 | imageTypeXBOX::D3DFMT_A4R4G4B4 | imageTypeXBOX::D3DFMT_R5G6B5 | imageTypeXBOX::D3DFMT_R5G5B5A1 | imageTypeXBOX::D3DFMT_R4G4B4A4): return 16;
-        (imageTypeXBOX::D3DFMT_A8L8 | imageTypeXBOX::D3DFMT_R6G5B5 | imageTypeXBOX::D3DFMT_G8B8 | imageTypeXBOX::D3DFMT_R8B8 | imageTypeXBOX::D3DFMT_D16 | imageTypeXBOX::D3DFMT_F16 | imageTypeXBOX::D3DFMT_L16 | imageTypeXBOX::D3DFMT_YUY2 | imageTypeXBOX::D3DFMT_UYVY): return 16;
-        (imageTypeXBOX::D3DFMT_LIN_A1R5G5B5 | imageTypeXBOX::D3DFMT_LIN_X1R5G5B5 | imageTypeXBOX::D3DFMT_LIN_A4R4G4B4 | imageTypeXBOX::D3DFMT_LIN_R5G6B5 | imageTypeXBOX::D3DFMT_LIN_R5G5B5A1 | imageTypeXBOX::D3DFMT_LIN_R4G4B4A4): return 16;
-        (imageTypeXBOX::D3DFMT_LIN_A8L8 | imageTypeXBOX::D3DFMT_LIN_R6G5B5 | imageTypeXBOX::D3DFMT_LIN_G8B8 | imageTypeXBOX::D3DFMT_LIN_R8B8 | imageTypeXBOX::D3DFMT_LIN_D16 | imageTypeXBOX::D3DFMT_LIN_F16 | imageTypeXBOX::D3DFMT_LIN_L16): return 16;
-        (imageTypeXBOX::D3DFMT_A8R8G8B8 | imageTypeXBOX::D3DFMT_X8R8G8B8 | imageTypeXBOX::D3DFMT_A8B8G8R8 | imageTypeXBOX::D3DFMT_B8G8R8A8 | imageTypeXBOX::D3DFMT_R8G8B8A8 | imageTypeXBOX::D3DFMT_D24S8 | imageTypeXBOX::D3DFMT_F24S8 | imageTypeXBOX::D3DFMT_V16U16): return 32;
-        (imageTypeXBOX::D3DFMT_LIN_A8R8G8B8 | imageTypeXBOX::D3DFMT_LIN_X8R8G8B8 | imageTypeXBOX::D3DFMT_LIN_A8B8G8R8 | imageTypeXBOX::D3DFMT_LIN_B8G8R8A8 | imageTypeXBOX::D3DFMT_LIN_R8G8B8A8 | imageTypeXBOX::D3DFMT_LIN_D24S8 | imageTypeXBOX::D3DFMT_LIN_F24S8 | imageTypeXBOX::D3DFMT_LIN_V16U16): return 32;
+fn bits_per_pixel_xbox(ImageTypeXBOX type) {
+    match (type) {
+        (ImageTypeXBOX::D3DFMT_L8 | ImageTypeXBOX::D3DFMT_AL8 | ImageTypeXBOX::D3DFMT_P8 | ImageTypeXBOX::D3DFMT_A8): return 8;
+        (ImageTypeXBOX::D3DFMT_LIN_L8 | ImageTypeXBOX::D3DFMT_LIN_AL8 | ImageTypeXBOX::D3DFMT_LIN_A8): return 8;
+        (ImageTypeXBOX::D3DFMT_A1R5G5B5 | ImageTypeXBOX::D3DFMT_X1R5G5B5 | ImageTypeXBOX::D3DFMT_A4R4G4B4 | ImageTypeXBOX::D3DFMT_R5G6B5 | ImageTypeXBOX::D3DFMT_R5G5B5A1 | ImageTypeXBOX::D3DFMT_R4G4B4A4): return 16;
+        (ImageTypeXBOX::D3DFMT_A8L8 | ImageTypeXBOX::D3DFMT_R6G5B5 | ImageTypeXBOX::D3DFMT_G8B8 | ImageTypeXBOX::D3DFMT_R8B8 | ImageTypeXBOX::D3DFMT_D16 | ImageTypeXBOX::D3DFMT_F16 | ImageTypeXBOX::D3DFMT_L16 | ImageTypeXBOX::D3DFMT_YUY2 | ImageTypeXBOX::D3DFMT_UYVY): return 16;
+        (ImageTypeXBOX::D3DFMT_LIN_A1R5G5B5 | ImageTypeXBOX::D3DFMT_LIN_X1R5G5B5 | ImageTypeXBOX::D3DFMT_LIN_A4R4G4B4 | ImageTypeXBOX::D3DFMT_LIN_R5G6B5 | ImageTypeXBOX::D3DFMT_LIN_R5G5B5A1 | ImageTypeXBOX::D3DFMT_LIN_R4G4B4A4): return 16;
+        (ImageTypeXBOX::D3DFMT_LIN_A8L8 | ImageTypeXBOX::D3DFMT_LIN_R6G5B5 | ImageTypeXBOX::D3DFMT_LIN_G8B8 | ImageTypeXBOX::D3DFMT_LIN_R8B8 | ImageTypeXBOX::D3DFMT_LIN_D16 | ImageTypeXBOX::D3DFMT_LIN_F16 | ImageTypeXBOX::D3DFMT_LIN_L16): return 16;
+        (ImageTypeXBOX::D3DFMT_A8R8G8B8 | ImageTypeXBOX::D3DFMT_X8R8G8B8 | ImageTypeXBOX::D3DFMT_A8B8G8R8 | ImageTypeXBOX::D3DFMT_B8G8R8A8 | ImageTypeXBOX::D3DFMT_R8G8B8A8 | ImageTypeXBOX::D3DFMT_D24S8 | ImageTypeXBOX::D3DFMT_F24S8 | ImageTypeXBOX::D3DFMT_V16U16): return 32;
+        (ImageTypeXBOX::D3DFMT_LIN_A8R8G8B8 | ImageTypeXBOX::D3DFMT_LIN_X8R8G8B8 | ImageTypeXBOX::D3DFMT_LIN_A8B8G8R8 | ImageTypeXBOX::D3DFMT_LIN_B8G8R8A8 | ImageTypeXBOX::D3DFMT_LIN_R8G8B8A8 | ImageTypeXBOX::D3DFMT_LIN_D24S8 | ImageTypeXBOX::D3DFMT_LIN_F24S8 | ImageTypeXBOX::D3DFMT_LIN_V16U16): return 32;
         (_): return 0;
     }
 };
 
-fn bytesPerBlockXbox(imageTypeXBOX type){
-    match(type){
-        (imageTypeXBOX::D3DFMT_DXT1): return 8;
-        (imageTypeXBOX::D3DFMT_DXT3 | imageTypeXBOX::D3DFMT_DXT5): return 16;
+fn bytes_per_block_xbox(ImageTypeXBOX type) {
+    match (type) {
+        (ImageTypeXBOX::D3DFMT_DXT1): return 8;
+        (ImageTypeXBOX::D3DFMT_DXT3 | ImageTypeXBOX::D3DFMT_DXT5): return 16;
         (_): return 0;
     }
 };
 
-enum textureMapType : u16{
+enum TextureMapType : u16 {
     UNKTT0   = 0,
     DIFFUSE  = 1,
     EFFECTS  = 2,
@@ -187,405 +191,404 @@ enum textureMapType : u16{
     SPECBALL = 5
 };
 
-enum materialTableCull : u8{
-    DRAWNBOTHSIDES = 0,
-    DRAWNONESIDE   = 8,
-    DRAWNBOTHSIDES_ALPHATEST = 0x10,
-    DRAWNONESIDE_ALPHATEST   = 0x18,
+enum MaterialTableCull : u8 {
+    DRAWNBOTHSIDES                 = 0,
+    DRAWNONESIDE                   = 8,
+    DRAWNBOTHSIDES_ALPHATEST       = 0x10,
+    DRAWNONESIDE_ALPHATEST         = 0x18,
     DRAWNBOTHSIDES_ALPHATEST_BIT20 = 0x30,
     DRAWNONESIDE_ALPHATEST_BIT20   = 0x38
 };
 
-bitfield fmtTXV_FLAG{
-    BIT01   : 1;  
-    CLAMP   : 1;  
-    BIT03   : 1;  
-    BIT04   : 1;  
-    TWOSIDED: 1;  
-    BIT06   : 1;  
-    BIT07   : 1;  
-    BIT08   : 1; 
-    SPEC    : 1;  
-    BIT10   : 1;
-    BIT11   : 1;
-    BIT12   : 1;
-    BIT13   : 1;
-    BIT14   : 1;
-    padd    : 2;
-    pad2    :16;
+bitfield FmtTXVFlag {
+    BIT01    : 1;
+    CLAMP    : 1;
+    BIT03    : 1;
+    BIT04    : 1;
+    TWOSIDED : 1;
+    BIT06    : 1;
+    BIT07    : 1;
+    BIT08    : 1;
+    SPEC     : 1;
+    BIT10    : 1;
+    BIT11    : 1;
+    BIT12    : 1;
+    BIT13    : 1;
+    BIT14    : 1;
+    padd     : 2;
+    pad2     : 16;
 };
 
-struct tVector4b{
-    u8 X;
-    u8 Y;
-    u8 Z;
-    u8 W;
-}[[static,name(std::format("{}{}{}{}", X, Y, Z, W))]];
+struct Vector4b {
+    u8 x;
+    u8 y;
+    u8 z;
+    u8 w;
+} [[static, name(std::format("{}{}{}{}", x, y, z, w))]];
 
-struct tVectorColorb {
-  u8 B  [[color("0000FF")]];
-  u8 G [[color("00FF00")]];
-  u8 R   [[color("FF0000")]];
-  u8 A;
-} [[static, color(std::format("{:02X}{:02X}{:02X}", R, G, B))]];
+struct VectorColorb {
+    u8 b [[color("0000FF")]];
+    u8 g [[color("00FF00")]];
+    u8 r [[color("FF0000")]];
+    u8 a;
+} [[static, color(std::format("{:02X}{:02X}{:02X}", r, g, b))]];
 
-struct tFace{
-    u16 X;
-    u16 Y;
-    u16 Z;
-}[[static,name(std::format("{}{}{}", X, Y, Z))]];
+struct Face {
+    u16 x;
+    u16 y;
+    u16 z;
+} [[static, name(std::format("{}{}{}", x, y, z))]];
 
-struct tVectorUVf{
-    float X;
-}[[static,name(std::format("{},{}", X, ((X * -1)+1)))]];
+struct VectorUVf {
+    float x;
+} [[static, name(std::format("{},{}", x, ((x * -1) + 1)))]];
 
-struct tVector2f{
-    float X;
-    float Y;
-}[[static,name(std::format("{},{}", X, Y))]];
+struct Vector2f {
+    float x;
+    float y;
+} [[static, name(std::format("{},{}", x, y))]];
 
-struct tVector3f{
-    float X;
-    float Y;
-    float Z;
-}[[static,name(std::format("{},{},{}", X, Y,Z))]];
+struct Vector3f {
+    float x;
+    float y;
+    float z;
+} [[static, name(std::format("{},{},{}", x, y, z))]];
 
-struct tVector4f{
-    float X;
-    float Y;
-    float Z;
-    float W;
-}[[static,name(std::format("{},{},{},{}", X, Y, Z, W))]];
-struct matrixUnk{ // data Present in stage files? boundaries?
-    u16 Unk1;
-    u16 Matrix2Count;
-    u32 Matrix2Offset; // if count is 0, then this will point to the material block
-}
-;
-struct matrixTable{
-    matrixType Type;
-    u8 ParentBoneIdx; // parent object to this bone?
-    u16 Ukn1;
-    u32 Ukn3; // on stages files an offset is present
-    u32 Ukn4;
-    u32 Ukn5;
-    tVector4f Matrix4x4Transform[4];
+struct Vector4f {
+    float x;
+    float y;
+    float z;
+    float w;
+} [[static, name(std::format("{},{},{},{}", x, y, z, w))]];
+
+struct MatrixUnk { // data Present in stage files? boundaries?
+    u16 unk1;
+    u16 matrix2Count;
+    u32 matrix2Offset; // if count is 0, then this will point to the material block
+};
+
+struct MatrixTable {
+    MatrixType type;
+    u8 parentBoneIdx; // parent object to this bone?
+    u16 ukn1;
+    u32 ukn3; // on stages files an offset is present
+    u32 ukn4;
+    u32 ukn5;
+    Vector4f matrix4x4Transform[4];
     padding[320]; //64 more than gamecube
 };
 
-#pragma endian little
+u8 gMdlVersion = 0;
+u16 gMdlWeightTables = 0;
 
-import std.io;
-
-u8 mdlVersion = 0;
-u16 mdlWeightTables = 0;
-
-struct mdl_header{
-    char MAGIC[4];
-    u8 Version; // 0x02=Xbox?, 0x03=Gamecube, 0x04=Xbox
-    mdlVersion = Version;
+struct MdlHeader {
+    char magic[4];
+    u8 version; // 0x02=Xbox?, 0x03=Gamecube, 0x04=Xbox
+    gMdlVersion = version;
     u8 textureOffsetPoint;
     u8 textureCount;
     u8 isLoaded;
     u8 unk;
-    modelContent Contents;
-    u16 MatricesCount;
-    u16 Objects0Count;
-    u16 Objects1Count;
-    u16 Objects2Count;
-    u16 BonesCount;
-    u16 MaterialsCount;
-    u16 WeightTableCount; // always 1?
-    mdlWeightTables = WeightTableCount;
-    u32 TextureTableOffset;
-    u32 MaterialOffset;
-    u32 TextureMapOffset;
-    u32 MatrixTableOffset;
-    u32 ukn_MatrixTableOffset;
-    u32 Object0Offset;
-    u32 Object1Offset;
-    u32 Object2Offset;
-    u32 WeightTableOffset;
-    u32 ukn01_offset;
-    u32 BoneOffset;
-    u32 BoneNameOffset;
-    u32 BoneHeaderOffset;
+    ModelContent contents;
+    u16 matricesCount;
+    u16 objects1Count;
+    u16 objects2Count;
+    u16 objects3Count;
+    u16 bonesCount;
+    u16 materialsCount;
+    u16 weightTableCount; // always 1?
+    gMdlWeightTables = weightTableCount;
+    u32 textureTableOffset;
+    u32 materialOffset;
+    u32 textureMapOffset;
+    u32 matrixTableOffset;
+    u32 uknMatrixTableOffset;
+    u32 object1Offset;
+    u32 object2Offset;
+    u32 object3Offset;
+    u32 weightTableOffset;
+    u32 ukn01Offset;
+    u32 boneOffset;
+    u32 boneNameOffset;
+    u32 boneHeaderOffset;
 };
 
-fn mipLevelByteCountXbox(imageTypeXBOX type, u32 mipWidth, u32 mipHeight){
-    if(bytesPerBlockXbox(type) != 0){
+fn mip_level_byte_count_xbox(ImageTypeXBOX type, u32 mipWidth, u32 mipHeight) {
+    if (bytes_per_block_xbox(type) != 0) {
         u32 blocksAcross = (mipWidth + 3) / 4;
         u32 blocksDown = (mipHeight + 3) / 4;
-        return blocksAcross * blocksDown * bytesPerBlockXbox(type);
+        return blocksAcross * blocksDown * bytes_per_block_xbox(type);
     }
-    return mipWidth * mipHeight * bitsPerPixelXbox(type) / 8;
+    return mipWidth * mipHeight * bits_per_pixel_xbox(type) / 8;
 };
 
-fn halfButAtLeastOne(u32 size){
-    if(size <= 1){
+fn half_but_at_least_one(u32 size) {
+    if (size <= 1) {
         return 1;
     }
     return size / 2;
 };
 
-fn textureByteCountXbox(imageTypeXBOX type, u32 width, u32 height, u32 mipMapCount){
+fn texture_byte_count_xbox(ImageTypeXBOX type, u32 width, u32 height, u32 mipMapCount) {
     u32 mipWidth = width;
     u32 mipHeight = height;
     u32 byteCount = 0;
     u32 mipLevel = 0;
-    while(mipLevel < mipMapCount || mipLevel == 0){
-        byteCount = byteCount + mipLevelByteCountXbox(type, mipWidth, mipHeight);
-        mipWidth = halfButAtLeastOne(mipWidth);
-        mipHeight = halfButAtLeastOne(mipHeight);
+    while (mipLevel < mipMapCount || mipLevel == 0) {
+        byteCount = byteCount + mip_level_byte_count_xbox(type, mipWidth, mipHeight);
+        mipWidth = half_but_at_least_one(mipWidth);
+        mipHeight = half_but_at_least_one(mipHeight);
         mipLevel = mipLevel + 1;
     }
     return byteCount;
 };
 
-u32 PalletCount = 0;
-u32 vxt_offset = 0;
-u8 vxt_type = 2;
-struct texturePalRow{
-u32 PaletteOffset;
-u32 PaletteCount;
-u32 Padd;
-tVectorColorb Pallet[PaletteCount] @ PaletteOffset + vxt_offset;
+u32 gPalletCount = 0;
+u32 gVxtOffset = 0;
+u8 gVxtType = 2;
+
+struct TexturePalRow {
+    u32 paletteOffset;
+    u32 paletteCount;
+    u32 padd;
+    VectorColorb pallet[paletteCount] @ paletteOffset + gVxtOffset;
 };
 
-struct textureDataTypeXbox2{
-u32 TexturePaletteOffset;
-fmtTXV_FLAG flags;
-u32 Unk1;
-if(vxt_type == 2){ // rowType2=36B（dataOff@16）、rowType1=32B（dataOff@12）。
-    u16 WidthVisible;
-u16 HeightVisible;
-}
-u32 DataOffset;
-imageTypeXBOX ImageType;
-u16 Width;
-u16 Height;
-u32 MipMapCount;
-u32 Pad2;
-if(TexturePaletteOffset){
-PalletCount +=1;
-}
-u8 data[textureByteCountXbox(ImageType, Width, Height, MipMapCount)] @ vxt_offset + DataOffset;
+struct TextureDataTypeXbox2 {
+    u32 texturePaletteOffset;
+    FmtTXVFlag flags;
+    u32 unk1;
+    if (gVxtType == 2) { // rowType2=36B（dataOff@16）、rowType1=32B（dataOff@12）。
+        u16 widthVisible;
+        u16 heightVisible;
+    }
+    u32 dataOffset;
+    ImageTypeXBOX imageType;
+    u16 width;
+    u16 height;
+    u32 mipMapCount;
+    u32 pad2;
+    if (texturePaletteOffset) {
+        gPalletCount += 1;
+    }
+    u8 data[texture_byte_count_xbox(imageType, width, height, mipMapCount)] @ gVxtOffset + dataOffset;
 };
 
-struct VXT{
-vxt_offset = $;
-char MAGIC[4];
-u8 type;
-vxt_type = type;
-u8 flag0;
-u8 flag1;
-padding[1];
-u32 TextureCount;
+struct VXT {
+    gVxtOffset = $;
+    char magic[4];
+    u8 type;
+    gVxtType = type;
+    u8 flag1;
+    u8 flag2;
+    padding[1];
+    u32 textureCount;
 
-u32 HeaderLength;
-u32 HeaderBlockSize;
+    u32 headerLength;
+    u32 headerBlockSize;
 
-textureDataTypeXbox2 TextureEntrys[TextureCount];
+    TextureDataTypeXbox2 textureEntrys[textureCount];
 
-
-texturePalRow pallets[PalletCount];
-
+    TexturePalRow pallets[gPalletCount];
 };
 
-struct textureMap{
-    textureMapType Type; // 0x01=Diffuse, 0x02=Effects, 0x03=Animating, 0x04=?, 0x05=SpecBall 
-    u16 Size; // size of entry?
-    if (Size != -1 && Size > 4) {
-        if (Type == 1 && Size == 36) {
-            tVector2f TileUV;
-            float Values[6];
-        }
-        else {
-            float Values[(Size - 4) / 4];
+struct TextureMap {
+    TextureMapType type; // 0x01=Diffuse, 0x02=Effects, 0x03=Animating, 0x04=?, 0x05=SpecBall
+    u16 size;            // size of entry?
+    if (size != -1 && size > 4) {
+        if (type == 1 && size == 36) {
+            Vector2f tileUv;
+            float values[6];
+        } else {
+            float values[(size - 4) / 4];
         }
     }
-}
-;
+};
 
- struct textureDataTypeXbox {
-    u32 TexturePaletteOffset; //TEXTURE PALETTE ROW OFFSET
-    fmtTXV_FLAG flags;
-    u32 Unk1; //00000000
-    if (vxt_header.Type == 2) {
-        u16 HeightVisible; //visible height
-        u16 WidthVisible; //visible width
+struct TextureDataTypeXbox {
+    u32 texturePaletteOffset; //TEXTURE PALETTE ROW OFFSET
+    FmtTXVFlag flags;
+    u32 unk1; //00000000
+    if (vxtHeader.type == 2) {
+        u16 heightVisible; //visible height
+        u16 widthVisible;  //visible width
     }
-    u32 CLUTOffset; // color look up table, if DXT this is the image data addr
-    imageTypeXBOX ImageType; //0C = DXT1; 0F=DXT5; 0B=INDEX_COLOR(p8);
-    u16 Height; // dimension but in multiples of 8
-    u16 Width; // dimension but in multiples of 8
-    u32 MipMapCount; // mip count range [1 - 6]
-    padding[4] ; // pad to align
-}
-;
+    u32 clutOffset;          // color look up table, if DXT this is the image data addr
+    ImageTypeXBOX imageType; //0C = DXT1; 0F=DXT5; 0B=INDEX_COLOR(p8);
+    u16 height;              // dimension but in multiples of 8
+    u16 width;               // dimension but in multiples of 8
+    u32 mipMapCount;         // mip count range [1 - 6]
+    padding[4];              // pad to align
+};
 
-
-struct materialTable{
-    materialType Type;
+struct MaterialTable {
+    MaterialType type;
     u8 ukn1;
     u8 ukn2;
-    materialTableCull CullMode; // 0x00=DrawnBothSides, 0x08=DrawnOneSide
-    opacitySrc OpacitySrc;
-    u32 VXTOffset0; // offsets within the VXT block
-    u32 VXTOffset1;
-    u32 VXTOffset2;
-    u32 Map0Offset; //offsets to the texture table entries
-    u32 Map1Offset;
-    u32 Map2Offset;
-    tVector4f AmbientRGBA;
-    tVector4f DiffuseRGBA;
-    tVector4f SpecularRGBA;
-    if (Map0Offset !=0) {
-        textureMap texture_map0 @ Map0Offset;   
+    MaterialTableCull cullMode; // 0x00=DrawnBothSides, 0x08=DrawnOneSide
+    OpacitySrc opacitySrc;
+    u32 vxtOffset1; // offsets within the VXT block
+    u32 vxtOffset2;
+    u32 vxtOffset3;
+    u32 map1Offset; //offsets to the texture table entries
+    u32 map2Offset;
+    u32 map3Offset;
+    Vector4f ambientRgba;
+    Vector4f diffuseRgba;
+    Vector4f specularRgba;
+    if (map1Offset != 0) {
+        TextureMap textureMap1 @ map1Offset;
     }
-    if (Map1Offset !=0) {
-        textureMap texture_map1 @ Map1Offset;   
+    if (map2Offset != 0) {
+        TextureMap textureMap2 @ map2Offset;
     }
-    if (Map2Offset !=0) {
-        textureMap texture_map2 @ Map2Offset;  
+    if (map3Offset != 0) {
+        TextureMap textureMap3 @ map3Offset;
     }
 };
 
- struct boneInfo { // bone positions relative to its parent
-    tVector4f EndPositionXYZScale;
-    tVector4f StartPositionXYZScale;
-    tVector3f Rotation; // eulerangles, degrees (n*360)
-    u32 BoneNameOffset;
-    tVector3f ukn_bone1;
-    u8 AimTargetIdx;
-    u8 BoneParentIdx;
-    u8 BoneIdx; // used for name look up?
-    boneType BoneType;
-    //if (BoneNameOffset != 0) {
-    char Name[] @ BoneNameOffset;
+struct BoneInfo { // bone positions relative to its parent
+    Vector4f endPositionXyzScale;
+    Vector4f startPositionXyzScale;
+    Vector3f rotation; // eulerangles, degrees (n*360)
+    u32 boneNameOffset;
+    Vector3f uknBone1;
+    u8 aimTargetIdx;
+    u8 boneParentIdx;
+    u8 boneIdx; // used for name look up?
+    BoneType boneType;
+    //if (boneNameOffset != 0) {
+    char name[] @ boneNameOffset;
     //}
-}[[name(std::format("{}", Name))]];
+} [[name(std::format("{}", name))]];
 
-struct buffer1{
-    tVectorColorb ColorRGBA;
-    tVector2f TextureUV;
-}[[static]];
-struct buffer2{
-    tVector4f PositonXYZScale;
-    tVector4f NormalXYZScale;
-}[[static]];
-struct buffer3{
-    tVector4f PositonXYZScale;
-    tVector4f NormalXYZScale;
-}[[static]];
-struct buffer4{
-    tVector3f Positon;
-    tVector3f Normal;
-    buffer1 vert_def;
-    u32 Pad;
-}[[static]];
-u16 vertCount = 0;
-struct face{
+struct Buffer1 {
+    VectorColorb colorRgba;
+    Vector2f textureUv;
+} [[static]];
+
+struct Buffer2 {
+    Vector4f positonXyzScale;
+    Vector4f normalXyzScale;
+} [[static]];
+
+struct Buffer3 {
+    Vector4f positonXyzScale;
+    Vector4f normalXyzScale;
+} [[static]];
+
+struct Buffer4 {
+    Vector3f positon;
+    Vector3f normal;
+    Buffer1 vertDef;
+    u32 pad;
+} [[static]];
+
+u16 gVertCount = 0;
+
+struct FaceIndex {
     u16 value; // ストリップ（0xFFFFで再開）またはリスト
-    if(value != 0xFFFF && vertCount < value){
-    vertCount = value;
+    if (value != 0xFFFF && gVertCount < value) {
+        gVertCount = value;
     }
 };
- struct layerObjectEntryXbox{
-    vertCount = 0;
-    meshXboxContent ObjectType; // 0x00=Static, 0x04=Skinned
-    primativeXbox PrimitiveType; // 0x00=TriangleStrip, 0x01=TriangleList
-    u32 FaceCount; // Number of Index in Index Buffer
-    u32 MatrixOffset;
-    u32 MaterialOffset;
-    u32 FaceOffset; // Index Buffer Offset
-    u32 Buffer1Offset; // for skinned and static meshes this is the vertex buffer
-    u32 Buffer2Offset;
-    u32 Buffer3Offset;
-    u32 Buffer4Offset;
-    if(mdlVersion >= 4){
-    u32 CenterRadiusOffset; // "Aman" describes this section as "Center+Radius Offset"
+
+struct LayerObjectEntryXbox {
+    gVertCount = 0;
+    MeshXboxContent objectType;  // 0x00=Static, 0x04=Skinned
+    PrimativeXbox primitiveType; // 0x00=TriangleStrip, 0x01=TriangleList
+    u32 faceCount;               // Number of Index in Index Buffer
+    u32 matrixOffset;
+    u32 materialOffset;
+    u32 faceOffset;    // Index Buffer Offset
+    u32 buffer1Offset; // for skinned and static meshes this is the vertex buffer
+    u32 buffer2Offset;
+    u32 buffer3Offset;
+    u32 buffer4Offset;
+    if (gMdlVersion >= 4) {
+        u32 centerRadiusOffset; // "Aman" describes this section as "Center+Radius Offset"
     }
-    
-    face skinned_mesh_data[FaceCount] @ FaceOffset;
-    vertCount+=1;
-    
-    if(ObjectType == meshXboxContent::STATICXBOX){
-    buffer4 staticVerts[vertCount] @ Buffer1Offset;
-    if(mdlVersion >= 4){
-        if(CenterRadiusOffset > 0){
-            tVector4f CenterRadius @ CenterRadiusOffset;
+
+    FaceIndex skinnedMeshData[faceCount] @ faceOffset;
+    gVertCount += 1;
+
+    if (objectType == MeshXboxContent::STATICXBOX) {
+        Buffer4 staticVerts[gVertCount] @ buffer1Offset;
+        if (gMdlVersion >= 4) {
+            if (centerRadiusOffset > 0) {
+                Vector4f centerRadius @ centerRadiusOffset;
+            }
         }
+    } else if (objectType == MeshXboxContent::SKINNEDXBOX) {
+        Buffer1 color[gVertCount] @ buffer1Offset;
+        Buffer2 position[gVertCount] @ buffer2Offset;
+        Buffer3 normal[gVertCount] @ buffer3Offset;
     }
-    }else if(ObjectType == meshXboxContent::SKINNEDXBOX){
-    buffer1 color[vertCount] @ Buffer1Offset;
-    buffer2 position[vertCount] @ Buffer2Offset;
-    buffer3 normal[vertCount] @ Buffer3Offset;
-    }
-    
-    };
-    
-u8 lastStat = 0;
-struct weightDef{
-        tVector3f Positon; // positions relative to assigned bone
-        float BoneWeight;
-        tVector3f Normal;
-        u8 BoneIdx;
-        u8 intcre;
-        u8 Unk1[2];
-        lastStat = intcre;
 };
 
-u32 longRow = 4;
-struct weightRowLong{ // 4本影響枠ではstat==1によりレコード数が累積拡張される。
-        weightDef defs[longRow];
-        longRow = longRow + lastStat;
+u8 gLastStat = 0;
+
+struct WeightDef {
+    Vector3f positon; // positions relative to assigned bone
+    float boneWeight;
+    Vector3f normal;
+    u8 boneIdx;
+    u8 intcre;
+    u8 unk1[2];
+    gLastStat = intcre;
 };
 
-struct weightBuffer { // Flat with dynamic sizing 1,2,3,4,5,6, .......
-    weightDef relative_position_normal1[parent.VertCount1];
-    weightDef relative_position_normal2[parent.VertCount2 * 2];
-    weightDef relative_position_normal3[parent.VertCount3 * 3];
-    weightRowLong relative_position_normal4[parent.VertCount4];
+u32 gLongRow = 4;
+
+struct WeightRowLong { // 4本影響枠ではstat==1によりレコード数が累積拡張される。
+    WeightDef defs[gLongRow];
+    gLongRow = gLongRow + gLastStat;
 };
 
-struct weightTable {
-    u32 VertCount1; // number of vertices with 1 bone weight per vertex bone_id1
-    u32 VertCount2; // number of vertices with 2 bone weight per vertex bone_id2
-    u32 VertCount3; // number of vertices with 3 bone weight per vertex bone_id3
-    u32 VertCount4; // number of vertices with 4 or more bone weight per vertex bone_id4
-    u32 WeightBufferOffset; // weight buffer, also contains vertices and Normals
-    u32 VertBuffer1Offset; // Vertex Buffer
-    u32 VertBuffer2Offset; // Vertex Buffer2, redundant?
-    longRow = 4;
-    weightBuffer weight_buffer @ WeightBufferOffset;
-
+struct WeightBuffer { // Flat with dynamic sizing 1,2,3,4,5,6, .......
+    WeightDef relativePositionNormal1[parent.vertCount1];
+    WeightDef relativePositionNormal2[parent.vertCount2 * 2];
+    WeightDef relativePositionNormal3[parent.vertCount3 * 3];
+    WeightRowLong relativePositionNormal4[parent.vertCount4];
 };
 
-struct weightRowV2{
-        lastStat = 0;
-        weightDef defs[while(lastStat != 1)];
+struct WeightTable {
+    u32 vertCount1;         // number of vertices with 1 bone weight per vertex bone_id1
+    u32 vertCount2;         // number of vertices with 2 bone weight per vertex bone_id2
+    u32 vertCount3;         // number of vertices with 3 bone weight per vertex bone_id3
+    u32 vertCount4;         // number of vertices with 4 or more bone weight per vertex bone_id4
+    u32 weightBufferOffset; // weight buffer, also contains vertices and Normals
+    u32 vertBuffer1Offset;  // Vertex Buffer
+    u32 vertBuffer2Offset;  // Vertex Buffer2, redundant?
+    gLongRow = 4;
+    WeightBuffer weightBuffer @ weightBufferOffset;
 };
-struct weightTableV2 {
+
+struct WeightRowV2 {
+    gLastStat = 0;
+    WeightDef defs[while (gLastStat != 1)];
+};
+
+struct WeightTableV2 {
     u32 zero;
-    u32 WeightBufferOffset;
-    u32 VertBuffer1Offset;
-    u32 VertBuffer2Offset;
-    u32 VertBuffer3Offset;
-    weightRowV2 weight_buffer[(VertBuffer2Offset - VertBuffer1Offset) / 32] @ WeightBufferOffset;
+    u32 weightBufferOffset;
+    u32 vertBuffer1Offset;
+    u32 vertBuffer2Offset;
+    u32 vertBuffer3Offset;
+    WeightRowV2 weightBuffer[(vertBuffer2Offset - vertBuffer1Offset) / 32] @ weightBufferOffset;
 };
 
-struct weightSection {
-    if(mdlWeightTables > 0){
-        if(mdlVersion > 2){
-            weightTable weight_table;
-        }else{
-            weightTableV2 weight_table;
+struct WeightSection {
+    if (gMdlWeightTables > 0) {
+        if (gMdlVersion > 2) {
+            WeightTable weightTable;
+        } else {
+            WeightTableV2 weightTable;
         }
     }
 };
 
-struct boneHeader{
+struct BoneHeader {
     u8 day;
     u8 month;
     u16 year;
@@ -596,16 +599,15 @@ struct boneHeader{
     char author[32];
 };
 
+MdlHeader gSc2Mdl @ 0;
+MatrixTable gMatrixTbl[gSc2Mdl.matricesCount] @ gSc2Mdl.matrixTableOffset;
+VXT gVxt @ gSc2Mdl.textureTableOffset;
+MaterialTable gVxtMaterials[gSc2Mdl.materialsCount] @ gSc2Mdl.materialOffset;
+BoneInfo gBoneData[gSc2Mdl.bonesCount] @ gSc2Mdl.boneOffset;
+MatrixUnk gUnkMtx @ gSc2Mdl.uknMatrixTableOffset;
 
-mdl_header SC2_MDL @0;
-matrixTable MatrixTBL[SC2_MDL.MatricesCount] @ SC2_MDL.MatrixTableOffset;
-VXT vxt @ SC2_MDL.TextureTableOffset;
-materialTable vxt_materials[SC2_MDL.MaterialsCount] @ SC2_MDL.MaterialOffset;
-boneInfo bone_data[SC2_MDL.BonesCount] @ SC2_MDL.BoneOffset;
-matrixUnk unkMtx @ SC2_MDL.ukn_MatrixTableOffset;
-
-layerObjectEntryXbox object_0_xbox[SC2_MDL.Objects0Count] @ SC2_MDL.Object0Offset;
-layerObjectEntryXbox object_1_xbox[SC2_MDL.Objects1Count] @ SC2_MDL.Object1Offset;
-layerObjectEntryXbox object_2_xbox[SC2_MDL.Objects2Count] @ SC2_MDL.Object2Offset;
-weightSection weights @ SC2_MDL.WeightTableOffset;
-boneHeader author @ SC2_MDL.BoneHeaderOffset;
+LayerObjectEntryXbox gObject1Xbox[gSc2Mdl.objects1Count] @ gSc2Mdl.object1Offset;
+LayerObjectEntryXbox gObject2Xbox[gSc2Mdl.objects2Count] @ gSc2Mdl.object2Offset;
+LayerObjectEntryXbox gObject3Xbox[gSc2Mdl.objects3Count] @ gSc2Mdl.object3Offset;
+WeightSection gWeights @ gSc2Mdl.weightTableOffset;
+BoneHeader gAuthor @ gSc2Mdl.boneHeaderOffset;

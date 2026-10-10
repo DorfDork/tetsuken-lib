@@ -1,4 +1,4 @@
-struct KHeader{
+struct KHeader {
     u32 magic;
     u8 day;
     u8 month;
@@ -8,8 +8,8 @@ struct KHeader{
     u16 hour;
     u16 numEntries;
     u16 unk4;
-    u32 unkOffset0;
     u32 unkOffset1;
+    u32 unkOffset2;
     u16 unk5;
     u16 unk6;
     u16 unk7;
@@ -19,21 +19,25 @@ struct KHeader{
     u16 neutralIdx;
     u16 unkA;
 };
-struct smallbit{
-u32 unk0;
-u32 unk1;
-u32 unk2;
-u32 unk3;
+
+struct SmallBit {
+    u32 unk1;
+    u32 unk2;
+    u32 unk3;
+    u32 unk4;
 };
-struct largebit{
-smallbit unkpack[5];
-u32 tail0;
-u32 tail1;
+
+struct LargeBit {
+    SmallBit unkPack[5];
+    u32 tail1;
+    u32 tail2;
 };
-struct headsec{
-smallbit test[4];
+
+struct HeadSec {
+    SmallBit test[4];
 };
-struct somthingIdkName {
+
+struct SomthingIdkName {
     u16 unk01;
     u16 unk02;
     u32 unk03;
@@ -57,10 +61,10 @@ struct somthingIdkName {
     u32 unk21;
     u32 hboxId;
 };
-struct KHFile{
-KHeader hdr;
-headsec chunks[hdr.numEntries];
 
+struct KHFile {
+    KHeader hdr;
+    HeadSec chunks[hdr.numEntries];
 };
 
-KHFile file @ 0;
+KHFile gFile @ 0;

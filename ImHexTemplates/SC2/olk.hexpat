@@ -1,17 +1,17 @@
-struct fmtOLK_Entry { // 16 Bytes
-    u32 addr; // relative to data buffer start
-    u32 size; // relative
-    u32 unix_time; // accumlated seconds since January 1, 1970
-    u32 reserved1;
-    };
+struct OLKEntry { // 16 Bytes
+    u32 addr;     // relative to data buffer start
+    u32 size;     // relative
+    u32 unixTime; // accumlated seconds since January 1, 1970
+    u32 reserved2;
+};
 
-struct fmtOLK {
-    u32 data_count;
-    char olk_id[4];
+struct OLK {
+    u32 dataCount;
+    char olkId[4];
     u32 alignment;
-    u32 reserved0;
-    fmtOLK_Entry data_info; // First Entry describes bounds of the data buffer
-    fmtOLK_Entry entrys[data_count];
-    };
-    
-fmtOLK OLK @ 0;
+    u32 reserved1;
+    OLKEntry dataInfo; // First Entry describes bounds of the data buffer
+    OLKEntry entrys[dataCount];
+};
+
+OLK gOlk @ 0;

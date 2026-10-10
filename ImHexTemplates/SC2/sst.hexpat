@@ -1,15 +1,15 @@
-u32 base = 0;
+u32 gBase = 0;
 
-struct Line{
-u32 offset;
-char text[] @ base + offset;
+struct Line {
+    u32 offset;
+    char text[] @ gBase + offset;
 };
 
-struct SST{
-u32 unk0;
-u32 count;
-base = $ + (count*4);
-Line lines[count];
+struct SST {
+    u32 unk0;
+    u32 count;
+    gBase = $ + (count * 4);
+    Line lines[count];
 };
 
-SST file @ 0;
+SST gFile @ 0;

@@ -1,11 +1,11 @@
-#KH11 & _2
+#kh11 & _2
 The Moveset info, DMG, Hitstun the works is here.
 The original non _2 was first rev of inspecting the KH11 of SC3
 _2 is using named info from the research done for 4,5,6. Still a wip
 #motion
 Animation
 The motion files used in all *Calibur* titles, (SC1 has slight diffrence as it bundles named animations)
-#MutiManAudio
+#mma
 For the audio files that pack mutiple files within.
 Originaly tairloed for 2 so just reads the chunks as is atm.
 #olk
