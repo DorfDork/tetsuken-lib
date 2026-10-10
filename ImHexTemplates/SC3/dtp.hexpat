@@ -1,7 +1,7 @@
 import std.core;
 import std.mem;
 
-struct PKGSlot {
+struct DTPSlot {
     u32 offset;
     u32 end @ $ [[hidden]];
     if (end > offset) {
@@ -9,9 +9,9 @@ struct PKGSlot {
     }
 };
 
-struct PKG {
+struct DTP {
     u32 count;
-    PKGSlot slots[count];
+    DTPSlot slots[count];
     u32 end;
 };
 
@@ -22,4 +22,4 @@ if (gProbe > 0xFFFF) { // check if dtp file is big endian
     std::core::set_endian(std::mem::Endian::Little);
 }
 
-PKG gPkg @ 0;
+DTP gDtp @ 0;
