@@ -118,7 +118,7 @@ struct DSPHeader {
 struct CHDEnt {
     u32 offset;
     u8 settings[0x4C]; // 0x4C
-    DSPHeader dsp;
+    DSPHeader dspHeader;
 };
 
 struct XHDWave {
@@ -151,7 +151,7 @@ struct HDp {
     u16 headerSize;
     u32 dataSize;
     if (magic == "CHDp") {
-        CHDEnt entrys[toneCount];
+        CHDEnt waves[toneCount];
     } else if (magic == "XHDp") {
         u32 entryHeadersOffset;
         u32 entryHeadersSize;
@@ -163,7 +163,7 @@ struct HDp {
             XHDWave waves[toneCount] @ start + wavHeaderOffset;
         }
     } else {
-        PHDEnt entrys[toneCount];
+        PHDEnt waves[toneCount];
     }
 };
 
@@ -173,7 +173,7 @@ struct Entry {
     u32 dataOffset;
     u32 dataSize;
     if (headerSize > 0) {
-        HDp header @ headerOffset;
+        HDp bank @ headerOffset;
     }
     if (dataSize > 0) {
         u8 data[dataSize] @ dataOffset;
@@ -181,8 +181,8 @@ struct Entry {
 };
 
 struct MMA {
-    Header hdr;
-    Entry ents[hdr.count];
+    Header header;
+    Entry entries[header.count];
 };
 
 u32 gMagic @ 0 [[hidden]];

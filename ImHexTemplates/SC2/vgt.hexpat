@@ -1,5 +1,6 @@
 #pragma endian big
 
+import std.core;
 import std.io;
 
 enum PalletTypeGCN : u32 {
@@ -74,9 +75,9 @@ enum LODType : u32 {
 };
 
 enum MaxAniso : u32 {
-    ONE  = 0,
-    TWO  = 1,
-    FOUR = 2
+    ANISO_1 = 0,
+    ANISO_2 = 1,
+    ANISO_4 = 2
 };
 
 bitfield TexMode0 {
@@ -145,40 +146,61 @@ struct TextureMipLevel {
     u8 mipData[mip_level_size_gcn(gMipWidth, gMipHeight, gMipImageType)];
 };
 
+bitfield TextureFlags {
+    PALETTE_PLANES : 1;
+    ALPHA_SLICE    : 1;
+    unk2           : 3;
+    ALPHA_TEST     : 1;
+    unk6           : 10;
+} [[bitfield_order(std::core::BitfieldOrder::LeastToMostSignificant, 16)]];
+
+bitfield TexObjFlags {
+    MIPMAP      : 1;
+    NOT_INDEXED : 1;
+    unk2        : 6;
+} [[bitfield_order(std::core::BitfieldOrder::LeastToMostSignificant, 8)]];
+
 struct TextureDataSlice {
     TexMode0 texModeInfo;
-    u16 unk1;
+    u16 texMode1Register;
     u8 maxLod;
     u8 minLod;
-    Dimension dimensions;
+    Dimension texImage;
     u32 dataOffset;
-    u16 unk5;
-    u16 unk6;
+    u16 imageSizeCheck @ $ + 0xC [[hidden]];
+    if (imageSizeCheck > 0) {
+        TextureFlags userFlags;
+        u16 combinedFormat;
+    } else {
+        u16 widthVisible;
+        u16 heightVisible;
+    }
     ImageTypeGCN imageType;
-    u32 unk7;
-    u16 imageSizeGc;
-    u16 unk9;
-    if (imageSizeGc > 0) {
-        u8 data[imageSizeGc * 32] @ gVgtOffset + dataOffset;
+    u32 tlutName;
+    u16 imageSize;
+    u8 loadFormat;
+    TexObjFlags texObjFlags;
+    if (imageSize > 0) {
+        u8 data[imageSize * 32] @ gVgtOffset + dataOffset;
         if (maxLod >= 16) {
-            gMipWidth = dimensions.x + 1;
-            gMipHeight = dimensions.y + 1;
+            gMipWidth = texImage.x + 1;
+            gMipHeight = texImage.y + 1;
             gMipImageType = imageType;
-            TextureMipLevel mips[maxLod / 16] @ gVgtOffset + dataOffset + imageSizeGc * 32;
+            TextureMipLevel mips[maxLod / 16] @ gVgtOffset + dataOffset + imageSize * 32;
         }
     }
 };
 
 struct PalletData {
     u32 texTlut; // TexTLUT?
-    u32 offset;
-    u16 count;
+    u32 paletteOffset;
+    u16 paletteCount;
     u16 pad;
     if (((texTlut >> 10) & 3) == 0) {
-        u16 dataGr[count] @ gVgtOffset + offset;
-        u16 dataAb[count] @ gVgtOffset + offset + (count * 2);
+        u16 dataGr[paletteCount] @ gVgtOffset + paletteOffset;
+        u16 dataAb[paletteCount] @ gVgtOffset + paletteOffset + (paletteCount * 2);
     } else {
-        u16 data[count] @ gVgtOffset + offset;
+        u16 data[paletteCount] @ gVgtOffset + paletteOffset;
     }
 };
 
@@ -186,7 +208,7 @@ struct TextureData {
     u32 texturePaletteOffset;
     TextureDataSlice slices[2];
     bool colorIndexed = slices[0].imageType == ImageTypeGCN::CI4 || slices[0].imageType == ImageTypeGCN::CI8 || slices[0].imageType == ImageTypeGCN::C14X2;
-    bool alphaIndexed = slices[1].imageSizeGc > 0 && (slices[1].imageType == ImageTypeGCN::CI4 || slices[1].imageType == ImageTypeGCN::CI8 || slices[1].imageType == ImageTypeGCN::C14X2);
+    bool alphaIndexed = slices[1].imageSize > 0 && (slices[1].imageType == ImageTypeGCN::CI4 || slices[1].imageType == ImageTypeGCN::CI8 || slices[1].imageType == ImageTypeGCN::C14X2);
     if (texturePaletteOffset > 0 && (colorIndexed || alphaIndexed)) {
         PalletData pallet @ gVgtOffset + texturePaletteOffset;
         if (alphaIndexed) {
@@ -196,11 +218,11 @@ struct TextureData {
 };
 
 struct PalletDataLegacy {
-    u32 offset;
+    u32 paletteOffset;
     u32 reserved;
     u32 size;
     u32 format;
-    u16 data[size / 2] @ gVgtOffset + offset;
+    u16 data[size / 2] @ gVgtOffset + paletteOffset;
 };
 
 struct TextureDataLegacy {
@@ -228,14 +250,14 @@ struct VGT {
     u8 flag2;
     u8 flag3;
 
-    u32 texCount;
-    u32 unk1;
-    u32 headerLen;
-    u32 headerBlockSize;
+    u32 textureCount;
+    u32 tlutCount;
+    u32 headerLength;
+    u32 tlutTableOffset;
     if (type == 3) {
-        TextureDataLegacy txtData[texCount] @ gVgtOffset + headerLen;
+        TextureDataLegacy textures[textureCount] @ gVgtOffset + headerLength;
     } else {
-        TextureData txtData[texCount] @ gVgtOffset + headerLen;
+        TextureData textures[textureCount] @ gVgtOffset + headerLength;
     }
     //PalletData pltData[texCount];
 };

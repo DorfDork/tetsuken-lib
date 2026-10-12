@@ -364,23 +364,23 @@ struct VPT {
     u8 textureCount;
     u8 extendedTexCount;
     u8 idk2;
-    u32 address1;
-    DmaTable dmaTables[dmaCount] @ gOffsetTo + address1;
-    u32 address2;
-    TexTable textures[textureCount] @ gOffsetTo + address2;
-    //u32 testa2[textureCount] @ gOffsetTo + address2;
-    u32 address3; //End of file
-    u32 testa3 @ gOffsetTo + address3;
-    u32 address4; //End of file
-    VPTDate date @ gOffsetTo + address4;
-    u32 address5;
-    u32 address6;
+    u32 dmaTableHeader;
+    DmaTable dmaTables[dmaCount] @ gOffsetTo + dmaTableHeader;
+    u32 textureTableHeader;
+    TexTable textures[textureCount] @ gOffsetTo + textureTableHeader;
+    //u32 testa2[textureCount] @ gOffsetTo + textureTableHeader;
+    u32 credits1; //End of file
+    u32 testa3 @ gOffsetTo + credits1;
+    u32 credits2; //End of file
+    VPTDate date @ gOffsetTo + credits2;
+    u32 extendOffset1;
+    u32 extendOffset2;
     if (offsetCount == 6) {
-        if (address5 > 0) {
-            DmaTable dmaTables2[dmaCount] @ gOffsetTo + address5;
+        if (extendOffset1 > 0) {
+            DmaTable dmaTables2[dmaCount] @ gOffsetTo + extendOffset1;
         }
-        if (address6 > 0) {
-            TexTable textures2[textureCount] @ gOffsetTo + address6;
+        if (extendOffset2 > 0) {
+            TexTable textures2[textureCount] @ gOffsetTo + extendOffset2;
         }
     }
     u32 trueDmaCount = (offsetCount == 6) ? dmaCount * 2 : dmaCount;

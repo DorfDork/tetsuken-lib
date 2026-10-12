@@ -117,23 +117,23 @@ struct MotHeader {
 };
 
 struct Moveset {
-    MotHeader hdr;
-    gScriptEnd = hdr.normal.hitboxOffset;
-    gCurStriptOff = hdr.normal.scriptOffset;
-    MotItem normal[hdr.normal.count] @ hdr.normal.itemsOffset;
+    MotHeader header;
+    gScriptEnd = header.normal.hitboxOffset;
+    gCurStriptOff = header.normal.scriptOffset;
+    MotItem normal[header.normal.count] @ header.normal.itemsOffset;
 
-    gCurStriptOff = hdr.enshutsu.scriptOffset;
-    MotItem enshutsu[hdr.enshutsu.count] @ hdr.enshutsu.itemsOffset;
+    gCurStriptOff = header.enshutsu.scriptOffset;
+    MotItem enshutsu[header.enshutsu.count] @ header.enshutsu.itemsOffset;
 
-    gCurStriptOff = hdr.yarare.scriptOffset;
-    MotItem yarare[hdr.yarare.count] @ hdr.yarare.itemsOffset;
+    gCurStriptOff = header.yarare.scriptOffset;
+    MotItem yarare[header.yarare.count] @ header.yarare.itemsOffset;
 
-    gCurStriptOff = hdr.sub.scriptOffset;
-    MotItem sub[hdr.sub.count] @ hdr.sub.itemsOffset;
+    gCurStriptOff = header.sub.scriptOffset;
+    MotItem sub[header.sub.count] @ header.sub.itemsOffset;
 
-    MotHurt hBoxes[hdr.hitboxCount] @ hdr.normal.hitboxOffset;
-    u16 grabDmg[hdr.grabDmgCount] @ hdr.normal.grabDmgOffset; // grab damage values
-    //MotItem items[hdr.motCount];
+    MotHurt hBoxes[header.hitboxCount] @ header.normal.hitboxOffset;
+    u16 grabDmg[header.grabDmgCount] @ header.normal.grabDmgOffset; // grab damage values
+    //MotItem items[header.motCount];
 };
 
 Moveset gMoves @ 0;

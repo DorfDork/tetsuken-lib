@@ -271,25 +271,44 @@ struct MatrixTable {
     MatrixType type;
     u8 parentBoneIdx; // parent object to this bone?
     u16 ukn1;
-    u32 ukn3; // on stages files an offset is present
+    u32 unkFlagListOffset; // on stages files an offset is present
     u32 ukn4;
     u32 ukn5;
     Vector4f matrix4x4Transform[4];
     padding[320]; //64 more than gamecube
 };
 
+struct Matrix2 {
+    Vector4f matrix4x4Transform[4];
+};
+
+struct StageBuffers {
+    if (gMdlContents == ModelContent::STAGE) {
+        u32 locatorOffset = $;
+        u32 listBufferOffset;
+        u32 nodeBufferOffset;
+        u32 matrixPaletteOffset;
+        u32 pad;
+        Matrix2 matrixPalette[(listBufferOffset - matrixPaletteOffset) / 64] @ matrixPaletteOffset;
+        u8 listBuffer[nodeBufferOffset - listBufferOffset] @ listBufferOffset;
+        u8 nodeBuffer[locatorOffset - nodeBufferOffset] @ nodeBufferOffset;
+    }
+};
+
 u8 gMdlVersion = 0;
+ModelContent gMdlContents = 0;
 u16 gMdlWeightTables = 0;
 
 struct MdlHeader {
     char magic[4];
     u8 version; // 0x02=Xbox?, 0x03=Gamecube, 0x04=Xbox
     gMdlVersion = version;
-    u8 textureOffsetPoint;
-    u8 textureCount;
-    u8 isLoaded;
-    u8 unk;
-    ModelContent contents;
+    u8 pointerListOffset;
+    u8 pointerCount;
+    u8 flags;
+    u8 unk08;
+    ModelContent modelContent;
+    gMdlContents = modelContent;
     u16 matricesCount;
     u16 objects1Count;
     u16 objects2Count;
@@ -307,7 +326,7 @@ struct MdlHeader {
     u32 object2Offset;
     u32 object3Offset;
     u32 weightTableOffset;
-    u32 ukn01Offset;
+    u32 stageBuffersOffset;
     u32 boneOffset;
     u32 boneNameOffset;
     u32 boneHeaderOffset;
@@ -381,13 +400,13 @@ struct VXT {
     gVxtType = type;
     u8 flag1;
     u8 flag2;
-    padding[1];
+    u8 flag3;
     u32 textureCount;
 
     u32 headerLength;
     u32 headerBlockSize;
 
-    TextureDataTypeXbox2 textureEntrys[textureCount];
+    TextureDataTypeXbox2 textures[textureCount];
 
     TexturePalRow pallets[gPalletCount];
 };
@@ -468,17 +487,17 @@ struct Buffer1 {
 } [[static]];
 
 struct Buffer2 {
-    Vector4f positonXyzScale;
+    Vector4f positionXyzScale;
     Vector4f normalXyzScale;
 } [[static]];
 
 struct Buffer3 {
-    Vector4f positonXyzScale;
+    Vector4f positionXyzScale;
     Vector4f normalXyzScale;
 } [[static]];
 
 struct Buffer4 {
-    Vector3f positon;
+    Vector3f position;
     Vector3f normal;
     Buffer1 vertDef;
     u32 pad;
@@ -509,7 +528,7 @@ struct LayerObjectEntryXbox {
         u32 centerRadiusOffset; // "Aman" describes this section as "Center+Radius Offset"
     }
 
-    FaceIndex skinnedMeshData[faceCount] @ faceOffset;
+    FaceIndex mesh[faceCount] @ faceOffset;
     gVertCount += 1;
 
     if (objectType == MeshXboxContent::STATICXBOX) {
@@ -529,7 +548,7 @@ struct LayerObjectEntryXbox {
 u8 gLastStat = 0;
 
 struct WeightDef {
-    Vector3f positon; // positions relative to assigned bone
+    Vector3f position; // positions relative to assigned bone
     float boneWeight;
     Vector3f normal;
     u8 boneIdx;
@@ -550,6 +569,7 @@ struct WeightBuffer { // Flat with dynamic sizing 1,2,3,4,5,6, .......
     WeightDef relativePositionNormal2[parent.vertCount2 * 2];
     WeightDef relativePositionNormal3[parent.vertCount3 * 3];
     WeightRowLong relativePositionNormal4[parent.vertCount4];
+    u32 end[4];
 };
 
 struct WeightTable {
@@ -599,15 +619,16 @@ struct BoneHeader {
     char author[32];
 };
 
-MdlHeader gSc2Mdl @ 0;
-MatrixTable gMatrixTbl[gSc2Mdl.matricesCount] @ gSc2Mdl.matrixTableOffset;
-VXT gVxt @ gSc2Mdl.textureTableOffset;
-MaterialTable gVxtMaterials[gSc2Mdl.materialsCount] @ gSc2Mdl.materialOffset;
-BoneInfo gBoneData[gSc2Mdl.bonesCount] @ gSc2Mdl.boneOffset;
-MatrixUnk gUnkMtx @ gSc2Mdl.uknMatrixTableOffset;
+MdlHeader gHeader @ 0;
+StageBuffers gStageBuffers @ gHeader.matrixTableOffset - 16;
+MatrixTable gMatrixTable[gHeader.matricesCount] @ gHeader.matrixTableOffset;
+VXT gVxt @ gHeader.textureTableOffset;
+MaterialTable gMaterials[gHeader.materialsCount] @ gHeader.materialOffset;
+BoneInfo gBones[gHeader.bonesCount] @ gHeader.boneOffset;
+MatrixUnk gUnkMtx @ gHeader.uknMatrixTableOffset;
 
-LayerObjectEntryXbox gObject1Xbox[gSc2Mdl.objects1Count] @ gSc2Mdl.object1Offset;
-LayerObjectEntryXbox gObject2Xbox[gSc2Mdl.objects2Count] @ gSc2Mdl.object2Offset;
-LayerObjectEntryXbox gObject3Xbox[gSc2Mdl.objects3Count] @ gSc2Mdl.object3Offset;
-WeightSection gWeights @ gSc2Mdl.weightTableOffset;
-BoneHeader gAuthor @ gSc2Mdl.boneHeaderOffset;
+LayerObjectEntryXbox gObject1Xbox[gHeader.objects1Count] @ gHeader.object1Offset;
+LayerObjectEntryXbox gObject2Xbox[gHeader.objects2Count] @ gHeader.object2Offset;
+LayerObjectEntryXbox gObject3Xbox[gHeader.objects3Count] @ gHeader.object3Offset;
+WeightSection gWeights @ gHeader.weightTableOffset;
+BoneHeader gBoneHeader @ gHeader.boneHeaderOffset;

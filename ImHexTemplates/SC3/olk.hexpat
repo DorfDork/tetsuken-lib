@@ -7,11 +7,11 @@ struct OLKEntry { // 16 Bytes
 
 struct OLK {
     u32 dataCount;
-    char olkId[4];
+    char magic[4];
     u32 alignment;
     u32 reserved1;
     OLKEntry dataInfo; // First Entry describes bounds of the data buffer
-    OLKEntry entrys[dataCount];
+    OLKEntry files[dataCount];
 };
 
 OLK gOlk @ 0;

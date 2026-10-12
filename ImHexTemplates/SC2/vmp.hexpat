@@ -258,23 +258,23 @@ struct VPT {
     u8 textureCount;
     u8 extendedTexCount;
     u8 idk2;
-    u32 address1;
-    DmaTable dmaTables[dmaCount] @ gOffsetTo + address1;
-    u32 address2;
-    TexTable textures[textureCount] @ gOffsetTo + address2;
-    //u32 testa2[textureCount] @ gOffsetTo + address2;
-    u32 address3; //End of file
-    u32 testa3 @ gOffsetTo + address3;
-    u32 address4; //End of file
-    VPTDate date @ gOffsetTo + address4;
-    u32 address5;
-    u32 address6;
+    u32 dmaTableHeader;
+    DmaTable dmaTables[dmaCount] @ gOffsetTo + dmaTableHeader;
+    u32 textureTableHeader;
+    TexTable textures[textureCount] @ gOffsetTo + textureTableHeader;
+    //u32 testa2[textureCount] @ gOffsetTo + textureTableHeader;
+    u32 credits1; //End of file
+    u32 testa3 @ gOffsetTo + credits1;
+    u32 credits2; //End of file
+    VPTDate date @ gOffsetTo + credits2;
+    u32 extendOffset1;
+    u32 extendOffset2;
     if (offsetCount == 6) {
-        if (address5 > 0) {
-            DmaTable dmaTables2[dmaCount] @ gOffsetTo + address5;
+        if (extendOffset1 > 0) {
+            DmaTable dmaTables2[dmaCount] @ gOffsetTo + extendOffset1;
         }
-        if (address6 > 0) {
-            TexTable textures2[textureCount] @ gOffsetTo + address6;
+        if (extendOffset2 > 0) {
+            TexTable textures2[textureCount] @ gOffsetTo + extendOffset2;
         }
     }
     u32 trueDmaCount = (offsetCount == 6) ? dmaCount * 2 : dmaCount;
@@ -400,7 +400,7 @@ struct TableCPoint {
 };
 
 struct TableB {
-    u8 unk0;
+    u8 layer;
     u8 unk1;
     u8 unk2;
     u8 unk3;
@@ -414,12 +414,12 @@ struct TableBPoint {
 
 struct ObjectLayer {
     u8 type;
-    u8 count;
+    u8 batchCount;
     u8 unk1;
     u8 layerCount;
     match (type) {
         (1): {
-            u8 indices[layerCount];
+            u8 palette[layerCount];
             padding[32 - layerCount];
         }
         (2): {
@@ -439,7 +439,7 @@ struct ObjectLayer {
     }
     u32 unk2;
     if (type < 2) {
-        TableBPoint entrys[count];
+        TableBPoint batches[batchCount];
     }
 };
 
@@ -456,22 +456,22 @@ struct Table2 {
 
 struct Header {
     u8 version;
-    u8 unk01;
-    u8 unk02;
+    u8 revision;
+    u8 pointerCount;
     u8 unk03;
     u8 unk04;
     u8 unk05;
     u8 unk06;
-    u8 unk07;
+    u8 modelContent;
     u16 object1Count;
     u16 boneCount;
     u32 vertCount;
     //padding[16]; //SC3 Specal
     u32 boneOffset;
-    u32 texFileAddr;
+    u32 textureTableOffset;
     u32 object1Offset;
-    u32 table5Addr;
-    u32 table4Addr;
+    u32 table5Offset;
+    u32 table4Offset;
     u32 boneHeaderOffset;
     //u32 unk016;
 };
@@ -513,15 +513,15 @@ struct BoneHeader {
 };
 
 struct VMP {
-    Header hdr;
-    ObjectPoint objects[hdr.object1Count];
-    //Table2 tbl2 @ hdr.table2Addr;
-    //u32 tbl3 @ hdr.table3Addr;
-    Table4Entrys tbl4 @ hdr.table4Addr;
-    BoneInfo bones[hdr.boneCount] @ hdr.boneOffset;
+    Header header;
+    ObjectPoint objects[header.object1Count];
+    //Table2 tbl2 @ header.table2Offset;
+    //u32 tbl3 @ header.table3Offset;
+    Table4Entrys tbl4 @ header.table4Offset;
+    BoneInfo bones[header.boneCount] @ header.boneOffset;
     VPT tex @ gOffsetTo;
-    BoneHeader author @ hdr.boneHeaderOffset;
-    //u8 texture[hdr.boneHeaderOffset - hdr.texFileAddr] @ hdr.texFileAddr;
+    BoneHeader author @ header.boneHeaderOffset;
+    //u8 texture[header.boneHeaderOffset - header.textureTableOffset] @ header.textureTableOffset;
 };
 
 u32 gOffsetTo @ 0x14;

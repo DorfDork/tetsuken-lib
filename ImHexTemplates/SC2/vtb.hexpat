@@ -32,9 +32,9 @@ struct Header {
 };
 
 struct VTB {
-    Header hdr;
-    Group groups[hdr.groupCount];
-    Entry entrys[hdr.count] @ hdr.entriesOffset;
+    Header header;
+    Group groups[header.groupCount];
+    Entry entries[header.count] @ header.entriesOffset;
 };
 
 VTB gFile @ 0;

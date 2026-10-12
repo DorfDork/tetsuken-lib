@@ -1,5 +1,6 @@
 #pragma endian big
 
+import std.core;
 import std.io;
 import std.mem;
 
@@ -209,7 +210,7 @@ struct MatrixTable {
     } else {
         u8 parentBoneIdx; // parent object to this bone?
         u16 ukn1;
-        u32 ukn3; // on stages files an offset is present
+        u32 unkFlagListOffset; // on stages files an offset is present
         u32 ukn4;
         u32 ukn5;
     }
@@ -226,20 +227,22 @@ struct MatrixTable {
         }
     } else {
         padding[256]; //64 more than gamecube
-        if (ukn3 > 0) {
-            MatrixUnkFlagList unkFlagList @ ukn3;
+        if (unkFlagListOffset > 0) {
+            MatrixUnkFlagList unkFlagList @ unkFlagListOffset;
         }
     }
 };
 
 struct StageBuffers {
     if (gMdlContents == ModelContent::STAGE) {
-        u32 buffer2Offset;
-        u32 buffer2End;
-        u32 buffer1Offset;
-        padding[4];
-        u8 buffer1[buffer2Offset - buffer1Offset] @ buffer1Offset;
-        u8 buffer2[buffer2End - buffer2Offset] @ buffer2Offset;
+        u32 locatorOffset = $;
+        u32 listBufferOffset;
+        u32 nodeBufferOffset;
+        u32 matrixPaletteOffset;
+        u32 pad;
+        Matrix2 matrixPalette[(listBufferOffset - matrixPaletteOffset) / 64] @ matrixPaletteOffset;
+        u8 listBuffer[nodeBufferOffset - listBufferOffset] @ listBufferOffset;
+        u8 nodeBuffer[locatorOffset - nodeBufferOffset] @ nodeBufferOffset;
     }
 };
 
@@ -251,20 +254,20 @@ struct MdlHeader {
     char magic[4];
     u8 version; // 0x02=Xbox?, 0x03=Gamecube, 0x04=Xbox
     gMdlVersion = version;
-    u8 textureOffsetPoint;
-    u8 textureCount;
-    u8 isNotTexture;
-    u8 unk;
-    ModelContent contents;
-    gMdlContents = contents;
+    u8 pointerListOffset;
+    u8 pointerCount;
+    u8 flags;
+    u8 unk08;
+    ModelContent modelContent;
+    gMdlContents = modelContent;
     u16 matricesCount;
     u16 objects1Count;
     u16 objects2Count;
     u16 objects3Count;
     u16 bonesCount;
     u16 materialsCount;
-    u16 meshCount; // always 1?
-    gMdlWeightTables = meshCount;
+    u16 weightTableCount; // always 1?
+    gMdlWeightTables = weightTableCount;
     u32 textureTableOffset;
     u32 materialOffset;
     u32 textureMapOffset;
@@ -274,7 +277,7 @@ struct MdlHeader {
     u32 object2Offset;
     u32 object3Offset;
     u32 weightTableOffset;
-    u32 ukn01Offset;
+    u32 stageBuffersOffset;
     u32 boneOffset;
     u32 boneNameOffset;
     u32 boneHeaderOffset;
@@ -305,9 +308,9 @@ enum LODType : u32 {
 };
 
 enum MaxAniso : u32 {
-    ONE  = 0,
-    TWO  = 1,
-    FOUR = 2
+    ANISO_1 = 0,
+    ANISO_2 = 1,
+    ANISO_4 = 2
 };
 
 bitfield TexMode0 {
@@ -381,40 +384,61 @@ struct TextureMipLevel {
     u8 mipData[mip_level_size_gcn(gMipWidth, gMipHeight, gMipImageType)];
 };
 
+bitfield TextureFlags {
+    PALETTE_PLANES : 1;
+    ALPHA_SLICE    : 1;
+    unk2           : 3;
+    ALPHA_TEST     : 1;
+    unk6           : 10;
+} [[bitfield_order(std::core::BitfieldOrder::LeastToMostSignificant, 16)]];
+
+bitfield TexObjFlags {
+    MIPMAP      : 1;
+    NOT_INDEXED : 1;
+    unk2        : 6;
+} [[bitfield_order(std::core::BitfieldOrder::LeastToMostSignificant, 8)]];
+
 struct TextureDataSlice {
     TexMode0 texModeInfo;
-    u16 unk1;
+    u16 texMode1Register;
     u8 maxLod;
     u8 minLod;
-    Dimension dimensions;
+    Dimension texImage;
     u32 dataOffset;
-    u16 unk5;
-    u16 unk6;
+    u16 imageSizeCheck @ $ + 0xC [[hidden]];
+    if (imageSizeCheck > 0) {
+        TextureFlags userFlags;
+        u16 combinedFormat;
+    } else {
+        u16 widthVisible;
+        u16 heightVisible;
+    }
     ImageTypeGCN imageType;
-    u32 unk7;
-    u16 imageSizeGc;
-    u16 unk9;
-    if (imageSizeGc > 0) {
-        u8 data[imageSizeGc * 32] @ gVgtOffset + dataOffset;
+    u32 tlutName;
+    u16 imageSize;
+    u8 loadFormat;
+    TexObjFlags texObjFlags;
+    if (imageSize > 0) {
+        u8 data[imageSize * 32] @ gVgtOffset + dataOffset;
         if (maxLod >= 16) {
-            gMipWidth = dimensions.x + 1;
-            gMipHeight = dimensions.y + 1;
+            gMipWidth = texImage.x + 1;
+            gMipHeight = texImage.y + 1;
             gMipImageType = imageType;
-            TextureMipLevel mips[maxLod / 16] @ gVgtOffset + dataOffset + imageSizeGc * 32;
+            TextureMipLevel mips[maxLod / 16] @ gVgtOffset + dataOffset + imageSize * 32;
         }
     }
 };
 
 struct PalletData {
     u32 texTlut; // TexTLUT?
-    u32 offset;
-    u16 count;
+    u32 paletteOffset;
+    u16 paletteCount;
     u16 pad;
     if (((texTlut >> 10) & 3) == 0) {
-        u16 dataGr[count] @ gVgtOffset + offset;
-        u16 dataAb[count] @ gVgtOffset + offset + (count * 2);
+        u16 dataGr[paletteCount] @ gVgtOffset + paletteOffset;
+        u16 dataAb[paletteCount] @ gVgtOffset + paletteOffset + (paletteCount * 2);
     } else {
-        u16 data[count] @ gVgtOffset + offset;
+        u16 data[paletteCount] @ gVgtOffset + paletteOffset;
     }
 };
 
@@ -422,7 +446,7 @@ struct TextureData {
     u32 texturePaletteOffset;
     TextureDataSlice slices[2];
     bool colorIndexed = slices[0].imageType == ImageTypeGCN::CI4 || slices[0].imageType == ImageTypeGCN::CI8 || slices[0].imageType == ImageTypeGCN::C14X2;
-    bool alphaIndexed = slices[1].imageSizeGc > 0 && (slices[1].imageType == ImageTypeGCN::CI4 || slices[1].imageType == ImageTypeGCN::CI8 || slices[1].imageType == ImageTypeGCN::C14X2);
+    bool alphaIndexed = slices[1].imageSize > 0 && (slices[1].imageType == ImageTypeGCN::CI4 || slices[1].imageType == ImageTypeGCN::CI8 || slices[1].imageType == ImageTypeGCN::C14X2);
     if (texturePaletteOffset > 0 && (colorIndexed || alphaIndexed)) {
         PalletData pallet @ gVgtOffset + texturePaletteOffset;
         if (alphaIndexed) {
@@ -432,11 +456,11 @@ struct TextureData {
 };
 
 struct PalletDataLegacy {
-    u32 offset;
+    u32 paletteOffset;
     u32 reserved;
     u32 size;
     u32 format;
-    u16 data[size / 2] @ gVgtOffset + offset;
+    u16 data[size / 2] @ gVgtOffset + paletteOffset;
 };
 
 struct TextureDataLegacy {
@@ -464,14 +488,14 @@ struct VGT {
     u8 flag2;
     u8 flag3;
 
-    u32 texCount;
-    u32 unk1;
-    u32 headerLen;
-    u32 headerBlockSize;
+    u32 textureCount;
+    u32 tlutCount;
+    u32 headerLength;
+    u32 tlutTableOffset;
     if (type == 3) {
-        TextureDataLegacy txtData[texCount] @ gVgtOffset + headerLen;
+        TextureDataLegacy textures[textureCount] @ gVgtOffset + headerLength;
     } else {
-        TextureData txtData[texCount] @ gVgtOffset + headerLen;
+        TextureData textures[textureCount] @ gVgtOffset + headerLength;
     }
     //PalletData pltData[texCount];
 };
@@ -732,19 +756,19 @@ struct GCDisplayListCopyHeader {
 };
 
 struct LayerObjectEntryGC {
-    u8 unk0; // These unk are consistent with skinned/static meshes
-    gGcMeshType = unk0;
+    u8 meshType; // These unk are consistent with skinned/static meshes
+    gGcMeshType = meshType;
     u8 posStride;
     ComponentFormat positionFormat;
-    u8 posScale;
+    u8 posFraction;
 
     u8 normalStride;
     ComponentFormat normalFormat;
-    u8 normalScale;
+    u8 normalFraction;
 
     u8 uvStride;
     ComponentFormat uvFormat;
-    u8 uvScale;
+    u8 uvFraction;
 
     VertexComponentFormat indiceType1;
     VertexComponentFormat indiceType2;
@@ -774,11 +798,11 @@ struct LayerObjectEntryGC {
     gGcNormalCount = 0;
     gGcColorCount = 0;
     gGcTexCoordCount = 0;
-    GCIndc polys[while ($ < endAddress && std::mem::read_unsigned($ + (gGcMeshType == 2 ? 1 : 0), 1) != 0)] @ faceOffset;
+    GCIndc mesh[while ($ < endAddress && std::mem::read_unsigned($ + (gGcMeshType == 2 ? 1 : 0), 1) != 0)] @ faceOffset;
     if (gGcMeshType == 2) {
         GCDisplayListCopyHeader copyHeader @ faceOffset - 32;
         u32 copyEndAddress = endAddress + bufferAlloc;
-        GCIndc polysCopy[while ($ < copyEndAddress && std::mem::read_unsigned($ + 1, 1) != 0)] @ endAddress;
+        GCIndc meshCopy[while ($ < copyEndAddress && std::mem::read_unsigned($ + 1, 1) != 0)] @ endAddress;
     }
     if (position2Offset > 0) {
         if (colorOffset > 0) {
@@ -799,12 +823,12 @@ struct LayerObjectEntryGC {
         if (position1Offset > 0) {
             gGcArrayFormat = positionFormat;
             gGcArrayStride = posStride;
-            GCArrayEntry test1[gGcPositionCount] @ position1Offset;
+            GCArrayEntry positions[gGcPositionCount] @ position1Offset;
         }
         if (normal1Offset > 0) {
             gGcArrayFormat = normalFormat;
             gGcArrayStride = normalStride;
-            GCArrayEntry nTest1[gGcNormalCount] @ normal1Offset;
+            GCArrayEntry normals[gGcNormalCount] @ normal1Offset;
         }
         if (colorOffset > 0) {
             VectorColorb vertexColor[gGcColorCount] @ colorOffset;
@@ -812,12 +836,12 @@ struct LayerObjectEntryGC {
         if (texCoordOffset > 0) {
             gGcArrayFormat = uvFormat;
             gGcArrayStride = uvStride;
-            GCArrayEntry uvTest[gGcTexCoordCount] @ texCoordOffset;
+            GCArrayEntry texCoords[gGcTexCoordCount] @ texCoordOffset;
         }
     }
     if (gMdlVersion >= 3) {
         if (boundingOffset > 0) {
-            Vector4f boundBox @ boundingOffset;
+            Vector4f centerRadius @ boundingOffset;
         }
     }
 };
@@ -825,7 +849,7 @@ struct LayerObjectEntryGC {
 u8 gLastStat = 0;
 
 struct WeightDef {
-    s16 positon[3]; // positions relative to assigned bone &
+    s16 position[3]; // positions relative to assigned bone &
     s16 boneWeight; // # / 8192
     s16 normal[3];  // # / 16384
     u8 intcre;
@@ -845,6 +869,7 @@ struct WeightBuffer { // Flat with dynamic sizing 1,2,3,4,5,6, .......
     WeightDef relativePositionNormal2[parent.vertCount2 * 2];
     WeightDef relativePositionNormal3[parent.vertCount3 * 3];
     WeightRowLong relativePositionNormal4[parent.vertCount4];
+    WeightDef end;
 };
 
 struct WeightTable {
@@ -853,24 +878,24 @@ struct WeightTable {
     u32 vertCount3;         // number of vertices with 3 bone weight per vertex bone_id3
     u32 vertCount4;         // number of vertices with 4 or more bone weight per vertex bone_id4
     u32 weightBufferOffset; // weight buffer, also contains vertices and Normals
-    u32 vertBuffer1Offset;  // Vertex Buffer
-    u32 vertBuffer2Offset;  // Vertex Buffer2, redundant?
-    u32 normalBuffer1Offset;
-    u32 normalBuffer2Offset;
+    u32 vertFrame1Offset;   // Vertex Buffer
+    u32 vertFrame2Offset;   // Vertex Buffer2
+    u32 normalFrame1Offset;
+    u32 normalFrame2Offset;
     gLongRow = 4;
     WeightBuffer weightBuffer @ weightBufferOffset;
     u32 totalVertCount = vertCount1 + vertCount2 + vertCount3 + vertCount4;
-    if (vertBuffer1Offset > 0) {
-        Vector4f vertBuffer1[totalVertCount] @ vertBuffer1Offset;
+    if (vertFrame1Offset > 0) {
+        Vector4f vertFrame1[totalVertCount] @ vertFrame1Offset;
     }
-    if (vertBuffer2Offset > 0) {
-        Vector4f vertBuffer2[totalVertCount] @ vertBuffer2Offset;
+    if (vertFrame2Offset > 0) {
+        Vector4f vertFrame2[totalVertCount] @ vertFrame2Offset;
     }
-    if (normalBuffer1Offset > 0) {
-        Vector4f normalBuffer1[totalVertCount] @ normalBuffer1Offset;
+    if (normalFrame1Offset > 0) {
+        Vector4f normalFrame1[totalVertCount] @ normalFrame1Offset;
     }
-    if (normalBuffer2Offset > 0) {
-        Vector4f normalBuffer2[totalVertCount] @ normalBuffer2Offset;
+    if (normalFrame2Offset > 0) {
+        Vector4f normalFrame2[totalVertCount] @ normalFrame2Offset;
     }
 };
 
@@ -902,20 +927,20 @@ struct BoneHeader {
     char author[32];
 };
 
-MdlHeader gSc2Mdl @ 0;
-u32 gTextureMapEnd @ gSc2Mdl.uknMatrixTableOffset - 4;
-MatrixUnk gUnkMtx @ gSc2Mdl.uknMatrixTableOffset;
-StageBuffers gStageBuffers @ gSc2Mdl.matrixTableOffset - 16;
-MatrixTable gMatrixTbl[gSc2Mdl.matricesCount] @ gSc2Mdl.matrixTableOffset;
-VGT gVgt @ gSc2Mdl.textureTableOffset;
-MaterialTable gVgtMaterials[gSc2Mdl.materialsCount] @ gSc2Mdl.materialOffset;
-BoneInfo gBoneData[gSc2Mdl.bonesCount] @ gSc2Mdl.boneOffset;
+MdlHeader gHeader @ 0;
+u32 gTextureMapEnd @ gHeader.uknMatrixTableOffset - 4;
+MatrixUnk gUnkMtx @ gHeader.uknMatrixTableOffset;
+StageBuffers gStageBuffers @ gHeader.matrixTableOffset - 16;
+MatrixTable gMatrixTable[gHeader.matricesCount] @ gHeader.matrixTableOffset;
+VGT gVgt @ gHeader.textureTableOffset;
+MaterialTable gMaterials[gHeader.materialsCount] @ gHeader.materialOffset;
+BoneInfo gBones[gHeader.bonesCount] @ gHeader.boneOffset;
 
-LayerObjectEntryGC gObject1Gc[gSc2Mdl.objects1Count] @ gSc2Mdl.object1Offset;
-LayerObjectEntryGC gObject2Gc[gSc2Mdl.objects2Count] @ gSc2Mdl.object2Offset;
-LayerObjectEntryGC gObject3Gc[gSc2Mdl.objects3Count] @ gSc2Mdl.object3Offset;
+LayerObjectEntryGC gObject1Gc[gHeader.objects1Count] @ gHeader.object1Offset;
+LayerObjectEntryGC gObject2Gc[gHeader.objects2Count] @ gHeader.object2Offset;
+LayerObjectEntryGC gObject3Gc[gHeader.objects3Count] @ gHeader.object3Offset;
 SkinnedVertexArraysGC gSkinnedVertexArraysGc @ gSkinnedColorOffset;
 
-WeightSection gWeights @ gSc2Mdl.weightTableOffset;
+WeightSection gWeights @ gHeader.weightTableOffset;
 
-BoneHeader gAuthor @ gSc2Mdl.boneHeaderOffset;
+BoneHeader gBoneHeader @ gHeader.boneHeaderOffset;

@@ -91,16 +91,16 @@ struct Hdr {
     u8 day;
     u8 month;
     u16 year;
-    u8 sec;
-    u8 min;
+    u8 second;
+    u8 minute;
     u16 hour;
 };
 
-struct HIT {
+struct SHZ {
     Hdr header;
     Row rows[header.rowCount];
     Cell cells[header.cellCount];
     Triangle triangles[header.triangleCount];
 };
 
-HIT gHit @ 0;
+SHZ gShz @ 0;

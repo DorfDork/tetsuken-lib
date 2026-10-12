@@ -17,9 +17,9 @@ struct HurtIndexTable {
     ActionIndex indexes[6];
 };
 
-struct CommonHurt {
+struct HTB {
     u32 count;
-    HurtIndexTable entrys[count];
+    HurtIndexTable entries[count];
 };
 
-CommonHurt gCommonHurt @ 0;
+HTB gHtb @ 0;

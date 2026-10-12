@@ -227,7 +227,7 @@ struct Header {
 };
 
 struct Motion {
-    Header hdr;
+    Header header;
 };
 
 u32 gProbe @ 0 [[hidden]];

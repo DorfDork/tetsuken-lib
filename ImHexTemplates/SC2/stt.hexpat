@@ -5,11 +5,11 @@ struct Line {
     char text[] @ gBase + offset;
 };
 
-struct SST {
+struct STT {
     u32 unk0;
     u32 count;
     gBase = $ + (count * 4);
     Line lines[count];
 };
 
-SST gFile @ 0;
+STT gStt @ 0;

@@ -210,13 +210,13 @@ struct VXT {
     gVxtType = type;
     u8 flag1;
     u8 flag2;
-    padding[1];
+    u8 flag3;
     u32 textureCount;
 
     u32 headerLength;
     u32 headerBlockSize;
 
-    TextureDataTypeXbox2 textureEntrys[textureCount];
+    TextureDataTypeXbox2 textures[textureCount];
 
     TexturePalRow pallets[gPalletCount];
 };
