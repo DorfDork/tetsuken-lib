@@ -238,11 +238,11 @@ struct VPT {
     u8 dmaCount;
     u8 textureCount;
     u8 extendedTexCount;
-    u8 idk2;
+    u8 textureCountHigh;
     u32 dmaTableHeader;
     DmaTable dmaTables[dmaCount] @ gOffsetTo + dmaTableHeader;
     u32 textureTableHeader;
-    TexTable textures[textureCount] @ gOffsetTo + textureTableHeader;
+    TexTable textures[textureCount + textureCountHigh * 256] @ gOffsetTo + textureTableHeader;
     //u32 testa2[textureCount] @ gOffsetTo + textureTableHeader;
     u32 credits1; //End of file
     u32 testa3 @ gOffsetTo + credits1;
@@ -255,7 +255,7 @@ struct VPT {
             DmaTable dmaTables2[dmaCount] @ gOffsetTo + extendOffset1;
         }
         if (extendOffset2 > 0) {
-            TexTable textures2[textureCount] @ gOffsetTo + extendOffset2;
+            TexTable textures2[textureCount + textureCountHigh * 256] @ gOffsetTo + extendOffset2;
         }
     }
     u32 trueDmaCount = (offsetCount == 6) ? dmaCount * 2 : dmaCount;

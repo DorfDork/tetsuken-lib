@@ -257,11 +257,11 @@ struct VPT {
     u8 dmaCount;
     u8 textureCount;
     u8 extendedTexCount;
-    u8 idk2;
+    u8 textureCountHigh;
     u32 dmaTableHeader;
     DmaTable dmaTables[dmaCount] @ gOffsetTo + dmaTableHeader;
     u32 textureTableHeader;
-    TexTable textures[textureCount] @ gOffsetTo + textureTableHeader;
+    TexTable textures[textureCount + textureCountHigh * 256] @ gOffsetTo + textureTableHeader;
     //u32 testa2[textureCount] @ gOffsetTo + textureTableHeader;
     u32 credits1; //End of file
     u32 testa3 @ gOffsetTo + credits1;
@@ -274,7 +274,7 @@ struct VPT {
             DmaTable dmaTables2[dmaCount] @ gOffsetTo + extendOffset1;
         }
         if (extendOffset2 > 0) {
-            TexTable textures2[textureCount] @ gOffsetTo + extendOffset2;
+            TexTable textures2[textureCount + textureCountHigh * 256] @ gOffsetTo + extendOffset2;
         }
     }
     u32 trueDmaCount = (offsetCount == 6) ? dmaCount * 2 : dmaCount;
@@ -313,6 +313,19 @@ enum BoneType : u8 {
     RANDLID = 16
 };
 
+fn boneName(ref auto name) {
+    u8 shift = u8(name[0]) >= 0x80 ? 0x40 : 0;
+    str decoded = "";
+    for (u32 i = 0, i < sizeof(name), i += 1) {
+        u8 c = u8(name[i]) - shift;
+        if (c == 0) {
+            break;
+        }
+        decoded = decoded + char(c);
+    }
+    return decoded;
+};
+
 struct BoneInfo { // bone positions relative to its parent
     Vector4f endPositionXyzScale;
     Vector4f startPositionXyzScale;
@@ -324,7 +337,11 @@ struct BoneInfo { // bone positions relative to its parent
     u8 boneIdx; // used for name look up?
     BoneType boneType;
     if (boneNameOffset != 0) {
-        char name[] @ boneNameOffset;
+        if (std::mem::read_unsigned(boneNameOffset, 1) >= 0x80) {
+            char name[while(std::mem::read_unsigned($, 1) > 0x40)] @ boneNameOffset [[format("boneName")]];
+        } else {
+            char name[] @ boneNameOffset [[format("boneName")]];
+        }
     }
 };
 
@@ -342,7 +359,8 @@ enum VmdCommand : u8 {
     CULL  = 6,
     MATE  = 7,
     SKN_S = 8,
-    UV_SH = 9
+    UV_SH = 9,
+    MATE3 = 11
 };
 
 bitfield ShapeFlags {
@@ -360,6 +378,8 @@ struct TableC {
     if (type == VmdCommand::ST_SH) {
         ShapeFlags shape;
         u8 p1;
+    } else if (type == VmdCommand::MATE || type == VmdCommand::MATE3) {
+        u16 mate;
     } else {
         u16 qwc;
     }
@@ -372,12 +392,23 @@ struct TableC {
             u32 packetOffset;
             u8 packet[qwc * 16] @ packetOffset;
         }
+        (VmdCommand::MATE): {
+            u32 payload = (mate & 0xF) == 1 ? 16 : ((mate & 0xF) == 7 ? 64 : 32);
+            float values[payload / 4] @ currentOff + size - payload;
+        }
+        (VmdCommand::MATE3): {
+            u16 vectorIndex;
+            u16 secondIndex;
+            if (size >= 12) {
+                u32 lightIndex;
+            }
+        }
         (VmdCommand::TEX): {
             u32 textureEntry1;
             u32 textureEntry2;
             if (size >= 20) {
-                float f1;
-                float f2;
+                float scaleU;
+                float scaleV;
             }
             DimentionEnt texture @ textureEntry1 - (textureEntry1 % 0x10);
         }
@@ -448,10 +479,31 @@ struct ObjectPoint {
     ObjectLayer layer @ offset;
 };
 
-struct Table2 {
-    u32 unk1;
-    u32 unk2;
-    u32 unk3;
+struct Relocations {
+    u32 count;
+    u64 entries[count];
+};
+
+struct MaterialLight {
+    float values[8];
+};
+
+struct MaterialBank {
+    u16 vectorCount;
+    u16 lightCount;
+    u16 effectCount;
+    u16 unk06;
+    u16 unk08;
+    u16 unk0A;
+    u16 unk0C;
+    u16 unk0E;
+    u32 vectorsOffset;
+    u32 lightsOffset;
+    u32 effectsOffset;
+    u32 unk1C;
+    Vector4f vectors[vectorCount] @ vectorsOffset;
+    MaterialLight lights[lightCount] @ lightsOffset;
+    Vector4f effects[effectCount] @ effectsOffset;
 };
 
 struct Header {
@@ -465,7 +517,7 @@ struct Header {
     u8 modelContent;
     u16 object1Count;
     u16 boneCount;
-    u32 vertCount;
+    u32 objectAreaSize;
     padding[16]; //SC3 Specal
     u32 boneOffset;
     u32 textureTableOffset;
@@ -476,13 +528,13 @@ struct Header {
     u32 unk016;
     u32 table1Offset;
     if (pointerCount > 8) {
-        u32 table2Offset;
+        u32 relocations1Offset;
     }
     if (pointerCount > 9) {
-        u32 table3Offset;
+        u32 relocations2Offset;
     }
     if (pointerCount > 10) {
-        u32 table6Offset;
+        u32 materialBankOffset;
     }
 };
 
@@ -530,10 +582,13 @@ struct VMP {
         ObjectPoint objects[header.object1Count];
     }
     if (header.pointerCount > 8) {
-        Table2 tbl2 @ header.table2Offset;
+        Relocations relocations1 @ header.relocations1Offset;
     }
     if (header.pointerCount > 9) {
-        u32 tbl3 @ header.table3Offset;
+        Relocations relocations2 @ header.relocations2Offset;
+    }
+    if (header.pointerCount > 10 && header.materialBankOffset > 0) {
+        MaterialBank materials @ header.materialBankOffset;
     }
     Table4Entrys tbl4 @ header.table4Offset;
     BoneInfo bones[header.boneCount] @ header.boneOffset;

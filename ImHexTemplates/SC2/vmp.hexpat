@@ -257,11 +257,11 @@ struct VPT {
     u8 dmaCount;
     u8 textureCount;
     u8 extendedTexCount;
-    u8 idk2;
+    u8 textureCountHigh;
     u32 dmaTableHeader;
     DmaTable dmaTables[dmaCount] @ gOffsetTo + dmaTableHeader;
     u32 textureTableHeader;
-    TexTable textures[textureCount] @ gOffsetTo + textureTableHeader;
+    TexTable textures[textureCount + textureCountHigh * 256] @ gOffsetTo + textureTableHeader;
     //u32 testa2[textureCount] @ gOffsetTo + textureTableHeader;
     u32 credits1; //End of file
     u32 testa3 @ gOffsetTo + credits1;
@@ -274,7 +274,7 @@ struct VPT {
             DmaTable dmaTables2[dmaCount] @ gOffsetTo + extendOffset1;
         }
         if (extendOffset2 > 0) {
-            TexTable textures2[textureCount] @ gOffsetTo + extendOffset2;
+            TexTable textures2[textureCount + textureCountHigh * 256] @ gOffsetTo + extendOffset2;
         }
     }
     u32 trueDmaCount = (offsetCount == 6) ? dmaCount * 2 : dmaCount;
@@ -360,6 +360,8 @@ struct TableC {
     if (type == VmdCommand::ST_SH) {
         ShapeFlags shape;
         u8 p1;
+    } else if (type == VmdCommand::MATE) {
+        u16 mate;
     } else {
         u16 qwc;
     }
@@ -372,12 +374,16 @@ struct TableC {
             u32 packetOffset;
             u8 packet[qwc * 16] @ packetOffset;
         }
+        (VmdCommand::MATE): {
+            u32 payload = (mate & 0xF) == 1 ? 16 : ((mate & 0xF) == 7 ? 64 : 32);
+            float values[payload / 4] @ currentOff + size - payload;
+        }
         (VmdCommand::TEX): {
             u32 textureEntry1;
             u32 textureEntry2;
             if (size >= 20) {
-                float f1;
-                float f2;
+                float scaleU;
+                float scaleV;
             }
             DimentionEnt texture @ textureEntry1 - (textureEntry1 % 0x10);
         }
@@ -465,7 +471,7 @@ struct Header {
     u8 modelContent;
     u16 object1Count;
     u16 boneCount;
-    u32 vertCount;
+    u32 objectAreaSize;
     //padding[16]; //SC3 Specal
     u32 boneOffset;
     u32 textureTableOffset;
